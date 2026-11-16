@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Gilbert’s Planner</title><meta name="theme-color" content="#00205b">
+<style>
+/* Academic layout: readable dates, consistent rows, and restrained navy accents. */
+:root{color-scheme:light;
+ /* Light theme tokens. Every color below is reused across the stylesheet so dark mode only swaps values. */
+ --bg:#fff;--paper:#fff;--surface:#f4f6f9;--hover:#eaeef4;--accent-tint:#eaf0f8;--ink:#1d2735;--muted:#56637a;--faint:#8590a0;
+ --line:#dde2e9;--line-soft:#e8ecf1;--line-strong:#c6d1df;--navy:#00205b;--navy-hover:#173d72;--on-accent:#fff;
+ --accent:#3f6fa6;--accent-soft:#7a9cc2;--focus:#3f7bbf;--red:#a23732;--danger-tint:#faf2f0;--warn-tint:#f8eee8;--warn-ink:#9b5033;--now:#d1453b;--shadow:#10284d30}
+/* Dark theme: follows the system unless the toggle forces light or dark. */
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--bg:#10151d;--paper:#151c26;--surface:#1b2431;--hover:#232e3d;--accent-tint:#1d2b40;--ink:#e4e9f0;--muted:#a2adbd;--faint:#6f7b8c;--line:#2a3443;--line-soft:#222b38;--line-strong:#3a4658;--navy:#9cc0ee;--navy-hover:#bcd5f5;--on-accent:#0c1422;--accent:#6c9bd4;--accent-soft:#4f6f96;--focus:#7fb0ea;--red:#f08a80;--danger-tint:#2d1c1d;--warn-tint:#2e2219;--warn-ink:#e7a57f;--now:#ff6b5f;--shadow:#00000080}}
+:root[data-theme=dark]{color-scheme:dark;--bg:#10151d;--paper:#151c26;--surface:#1b2431;--hover:#232e3d;--accent-tint:#1d2b40;--ink:#e4e9f0;--muted:#a2adbd;--faint:#6f7b8c;--line:#2a3443;--line-soft:#222b38;--line-strong:#3a4658;--navy:#9cc0ee;--navy-hover:#bcd5f5;--on-accent:#0c1422;--accent:#6c9bd4;--accent-soft:#4f6f96;--focus:#7fb0ea;--red:#f08a80;--danger-tint:#2d1c1d;--warn-tint:#2e2219;--warn-ink:#e7a57f;--now:#ff6b5f;--shadow:#00000080}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer;color:inherit;background:none;border:0}button:disabled{opacity:.5;cursor:default}button,input,select,textarea{outline-offset:3px}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--focus)}h1,h2,h3,p{margin:0}h1{font:normal 34px/1.15 Georgia,"Times New Roman",serif;color:var(--navy);letter-spacing:-.6px}h2{font-size:16px;font-weight:650;line-height:1.4}small,.muted{color:var(--muted)}[hidden]{display:none!important}.app{min-height:100vh;display:grid;grid-template-columns:214px minmax(0,1fr);border-top:5px solid var(--navy)}
+.sidebar{background:var(--surface);border-right:1px solid var(--line);padding:28px 18px 22px;display:flex;flex-direction:column;gap:32px}.brand{display:flex;gap:11px;align-items:center;color:var(--navy);padding:0 7px}.logo{display:grid;place-items:center;width:32px;height:37px;background:var(--navy);color:var(--on-accent);font:23px Georgia,serif;flex-shrink:0}.brand-name{font-size:16px;font-weight:650;line-height:1.3;letter-spacing:-.3px}.brand-caption{display:block;font-size:12px;font-weight:400;color:var(--muted);margin-top:3px;letter-spacing:.2px}.nav{display:grid;gap:3px}.nav button{padding:10px 11px;text-align:left;font-size:14.5px;border-left:3px solid transparent;display:flex;align-items:center;gap:8px;color:var(--muted)}.nav button:hover{background:var(--hover)}.nav button.active{color:var(--navy);background:var(--accent-tint);border-left-color:var(--navy);font-weight:650}.nav-icon{display:none}.eyebrow{font-size:12px;letter-spacing:1px;font-weight:650;text-transform:uppercase;color:var(--muted)}.space-heading{display:flex;justify-content:space-between;align-items:center;padding-left:13px;margin-bottom:6px}.space-key{display:flex;align-items:center;gap:9px;padding:7px 14px;width:100%;font-size:12.5px;text-align:left;line-height:1.5}.space-key:hover{background:var(--hover)}.space-key span:last-child{overflow-wrap:anywhere}.dot{width:7px;height:7px;background:var(--course);display:inline-block;flex-shrink:0;border-radius:50%}.side-bottom{margin-top:auto;border-top:1px solid var(--line);padding:17px 9px 0;font-size:12.5px;color:var(--muted)}.side-bottom strong{font-weight:600}.backup{display:flex;gap:15px;margin-top:10px}.text-button{padding:0;color:var(--navy);font-weight:550;font-size:12.5px;text-decoration:underline;text-underline-offset:3px}.main{width:100%;max-width:1560px;margin:0 auto;padding:32px 35px 80px;min-width:0}.top{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;padding-bottom:23px;border-bottom:1px solid var(--navy);margin-bottom:21px}.top .eyebrow{font-size:12.5px;font-weight:400;letter-spacing:0;text-transform:none;margin-bottom:7px;color:var(--muted)}.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line-strong);border-radius:3px;padding:8px 12px;background:var(--paper);font-size:13.5px;font-weight:600;white-space:nowrap;min-height:35px}.btn:hover{background:var(--surface)}.btn.primary{background:var(--navy);color:var(--on-accent);border-color:var(--navy)}.btn.primary:hover{background:var(--navy-hover)}.icon-btn{display:inline-grid;place-items:center;min-width:29px;min-height:29px;padding:4px;border-radius:2px;font-size:14px;color:var(--muted)}.icon-btn:hover{background:var(--soft);color:var(--navy)}.sample{display:flex;justify-content:space-between;align-items:center;gap:14px;font-size:12.5px;color:var(--muted);background:var(--surface);border-left:3px solid var(--accent-soft);padding:9px 12px;margin-bottom:19px}.sample button{font-size:12.5px;text-decoration:underline;white-space:nowrap}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-bottom:1px solid var(--line);margin:0 0 27px;padding-bottom:19px;gap:20px}.stat{min-width:0;border-right:1px solid var(--line);padding-right:15px}.stat:last-child{border:0}.stat-top{font-size:12.5px;color:var(--muted)}.stat strong{font-size:24px;font-weight:550;line-height:1.4;display:block;color:var(--navy);font-variant-numeric:tabular-nums}.stat small{font-size:12px;display:block}.stat.overdue-count strong{color:var(--red)}.layout{display:grid;grid-template-columns:minmax(0,1fr) 248px;gap:30px;align-items:start}.panel{background:var(--paper);min-width:0}.panel-head{padding:0 0 12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px;border-bottom:1px solid var(--line)}.panel-head small{font-size:12px;font-weight:400}.toolbar{padding:12px 0;display:flex;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--line)}.toolbar input{flex:1;min-width:100px}.toolbar input,.toolbar select,.space-filter{font-size:12.5px;border:1px solid var(--line-strong);border-radius:3px;padding:8px 9px;color:var(--ink);background:var(--paper);max-width:100%;min-height:33px}.toolbar input::placeholder{color:var(--muted)}.entry-list-head,.entry-row{display:grid;grid-template-columns:23px 94px minmax(110px,1fr) 104px 73px 25px;column-gap:10px;align-items:center;min-width:0}.entry-list-head{font-size:11px;letter-spacing:.35px;color:var(--muted);padding:11px 0 8px;text-transform:uppercase;border-bottom:1px solid var(--line)}.entry-row{padding:13px 0;border-bottom:1px solid var(--line-soft);min-height:76px}.entry-group{margin-top:0}.entry-group-title{display:flex;align-items:center;gap:9px;justify-content:space-between;background:var(--surface);border-bottom:1px solid var(--line);padding:8px 10px;font-size:12px;font-weight:650;letter-spacing:.4px;color:var(--muted);text-transform:uppercase}.entry-group-title small{font-size:11px;color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none}.entry-group.overdue .entry-group-title{background:var(--danger-tint);color:var(--red)}.entry-group.today .entry-group-title{background:var(--accent-tint);color:var(--navy)}.check{width:18px;height:18px;border:1px solid var(--line-strong);border-radius:2px;display:grid;place-items:center;padding:0;margin:0;font-size:13.5px}.check:hover{border-color:var(--navy)}.check.checked{background:var(--navy);border-color:var(--navy);color:var(--on-accent)}.entry-marker{font-size:11px;font-weight:650;border:1px solid var(--line-strong);border-radius:2px;width:22px;height:22px;padding:0;color:var(--navy);text-align:center}.entry-deadline{font-variant-numeric:tabular-nums;line-height:1.45;min-width:0}.entry-day{display:block;font-size:12px;color:var(--muted)}.entry-deadline strong{display:block;font-size:14.5px;font-weight:600;color:var(--navy);white-space:nowrap}.entry-deadline .no-time{font-size:12px;font-weight:400;color:var(--muted)}.entry-deadline.late .entry-day,.entry-deadline.late strong{color:var(--red)}.task-content{min-width:0}.task-title{padding:0;text-align:left;display:block;max-width:100%;font-size:14.5px;font-weight:600;line-height:1.5;overflow-wrap:anywhere}.task-title:hover{text-decoration:underline;text-underline-offset:3px}.entry-detail{font-size:12px;color:var(--muted);margin-top:3px;overflow-wrap:anywhere}.entry-mobile-space,.entry-mobile-priority{display:none}.entry-space{font-size:12px;line-height:1.5;overflow-wrap:anywhere}.space-label{display:inline-flex;align-items:center;gap:6px;max-width:100%;overflow-wrap:anywhere}.tag{font-size:11px;font-weight:550;border-radius:2px;display:inline-block;color:var(--muted);padding:3px 5px;background:var(--surface);line-height:1.5;justify-self:start;white-space:normal}.tag.high{background:var(--warn-tint);color:var(--warn-ink)}.tag.low{background:var(--surface);color:var(--muted)}.completed .task-title{text-decoration:line-through;color:var(--faint)}.completed .entry-deadline{opacity:.65}.completed .tag{color:var(--faint);background:var(--surface)}.meta{display:flex;align-items:center;flex-wrap:wrap;gap:9px;font-size:12px;color:var(--muted);margin-top:5px}.due.overdue{color:var(--red)}.due.today{color:var(--navy)}.stack{display:grid;gap:27px;min-width:0}.stack>.panel{border-top:2px solid var(--line-strong);padding-top:11px}.stack .panel-head{padding-bottom:10px}.small-body{padding:14px 0}.event-item{display:flex;align-items:flex-start;gap:10px;margin:0 0 14px;padding:0 0 14px;border-bottom:1px solid var(--line-soft)}.event-item:last-child{margin:0;border:0;padding-bottom:0}.event-line{width:2px;height:32px;background:var(--course);flex-shrink:0;margin-top:3px}.event-info{min-width:0;flex:1}.event-info strong{display:block;font-size:13.5px;font-weight:550;overflow-wrap:anywhere}.event-info small{display:block;font-size:12px;margin-top:3px}.notes{width:100%;min-height:125px;border:0;border-bottom:1px solid var(--line);border-radius:0;resize:vertical;padding:3px 0;font-size:13.5px;line-height:27px;font-family:inherit;background:repeating-linear-gradient(var(--paper),var(--paper) 26px,var(--line-soft) 26px,var(--line-soft) 27px);color:var(--ink)}.empty{padding:30px 15px;text-align:center;font-size:13.5px;color:var(--muted)}.empty strong{font-weight:600;display:block;color:var(--ink);margin-bottom:5px}.empty .btn{margin-top:15px}.footer{display:flex;justify-content:space-between;align-items:center;gap:15px;border-top:1px solid var(--line);margin-top:28px;padding-top:14px;font-size:12px;color:var(--muted)}.mobile-backup{display:none}.view-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:15px}.week-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.week-controls strong{font-size:16px;font-weight:600;color:var(--navy)}.week-note{font-size:12px;color:var(--muted);margin-top:13px;line-height:1.7}.week-grid{display:grid;grid-template-columns:repeat(7,minmax(130px,1fr));overflow-x:auto;border:1px solid var(--line)}.day{padding:9px;min-height:340px;border-right:1px solid var(--line);background:var(--paper);min-width:0}.day:last-child{border-right:0}.day.current{background:var(--accent-tint)}.day-header{display:flex;justify-content:space-between;gap:6px;align-items:center;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--line)}.day-header small{display:block;font-size:12px;color:var(--muted);text-transform:uppercase}.day-header strong{font-size:23px;font-family:Georgia,serif;font-weight:400;color:var(--navy)}.day-card{display:block;width:100%;text-align:left;padding:9px 7px;margin-bottom:8px;border-left:2px solid var(--course);border-radius:1px;background:var(--surface);overflow-wrap:anywhere}.day-card strong{display:block;font-size:12.5px;font-weight:550;margin-top:3px}.day-card small{font-size:11px;color:var(--muted)}.day-card.assignment{background:var(--surface);border-left-style:dashed}.finished{opacity:.6;text-decoration:line-through}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}.exam-card,.space-card{border-top:2px solid var(--line-strong);border-bottom:1px solid var(--line);padding:18px 0}.card-top{display:flex;justify-content:space-between;gap:15px;margin-bottom:14px}.card-top h2{font-size:17px;font-weight:550;margin-top:8px;overflow-wrap:anywhere}.exam-date{font-size:12.5px;color:var(--muted);margin-bottom:16px}.progress{height:3px;background:var(--accent-tint);margin:10px 0}.progress span{display:block;height:100%;background:var(--accent)}.progress-text{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted);margin-bottom:18px}.topic{display:flex;align-items:center;gap:10px;margin:13px 0;font-size:13.5px;overflow-wrap:anywhere}.topic.done span{color:var(--faint);text-decoration:line-through}.exam-note{font-size:12.5px;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere;margin-top:16px}.space-swatch{width:26px;height:26px;background:var(--course);border-radius:2px;color:var(--on-accent);font-size:14.5px;font-weight:650;display:grid;place-items:center}.space-counts{display:flex;flex-wrap:wrap;gap:10px;font-size:12.5px;color:var(--muted);margin:14px 0 18px}.space-actions{display:flex;justify-content:space-between;gap:12px}.help{max-width:740px;font-size:13.5px;color:var(--muted);line-height:1.8;margin-bottom:22px}.notice{background:var(--surface);border-left:2px solid var(--accent-soft);padding:12px;font-size:13.5px;line-height:1.7}
+.calendar-panel{border:1px solid var(--line);overflow:hidden}.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}.calendar-weekday{font-size:12px;font-weight:600;text-align:left;padding:10px;background:var(--surface);color:var(--muted)}.calendar-weekday:first-child,.calendar-weekday:nth-child(7){color:var(--faint)}.calendar-cell{min-width:0;min-height:126px;border-top:1px solid var(--line);border-right:1px solid var(--line);padding:6px;background:var(--paper)}.calendar-cell:nth-child(7n){border-right:0}.calendar-cell.outside{background:var(--surface);color:var(--faint)}.calendar-cell.selected{background:var(--accent-tint);box-shadow:inset 0 0 0 1px var(--accent)}.calendar-date{min-width:26px;min-height:26px;display:block;padding:3px 6px;font-size:12.5px;font-weight:600;border-radius:2px;margin-bottom:5px}.is-today .calendar-date{background:var(--navy);color:var(--on-accent)}.calendar-entry{display:block;max-width:100%;width:100%;font-size:12px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:3px 0;padding:4px 4px;border-left:2px solid var(--course);background:var(--surface);min-height:24px;border-radius:0}.calendar-more{font-size:11px;color:var(--navy);padding:3px}.calendar-agenda{margin-top:25px}.calendar-add{display:flex;flex-wrap:wrap;gap:6px}
+dialog{width:min(520px,calc(100% - 28px));max-height:90vh;border:1px solid var(--line-strong);border-radius:5px;padding:0;color:var(--ink);box-shadow:0 12px 50px #10284d30}dialog::backdrop{background:#162b475c}.dialog-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-top:4px solid var(--navy);border-bottom:1px solid var(--line)}.form-body{display:grid;gap:15px;padding:20px 22px}.field{display:grid;gap:6px;font-size:13.5px;font-weight:600}.field small{font-size:12px;font-weight:400}.field input,.field select,.field textarea{width:100%;padding:9px 10px;background:var(--paper);border:1px solid var(--line-strong);border-radius:3px;font-weight:400;color:var(--ink);min-width:0}.field input[type=color]{height:40px;padding:4px}.field textarea{min-height:85px;resize:vertical}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.dialog-actions{display:flex;justify-content:space-between;gap:10px;padding:14px 22px;background:var(--surface);border-top:1px solid var(--line)}.dialog-actions>div{display:flex;gap:7px}.danger,.form-error{color:var(--red)}.form-error{font-size:13.5px}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:11px 16px;border-radius:3px;background:var(--navy);color:var(--on-accent);font-size:13.5px;z-index:20;max-width:calc(100vw - 230px);box-shadow:0 4px 15px #00205b20}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+.helper-launcher{position:fixed;bottom:18px;right:22px;z-index:9;display:flex;align-items:center;gap:7px;padding:9px 13px;background:var(--paper);border:1px solid var(--line-strong);color:var(--navy);border-radius:3px;font-size:12.5px;font-weight:600;box-shadow:0 2px 8px #00205b0d}.helper-launcher:hover{background:var(--soft)}.helper-spark{display:none}.helper-panel{position:fixed;bottom:65px;right:22px;width:390px;max-width:calc(100vw - 26px);height:550px;max-height:calc(100vh - 90px);max-height:calc(100dvh - 90px);z-index:10;display:flex;flex-direction:column;border:1px solid var(--line-strong);border-radius:5px;background:var(--paper);box-shadow:0 10px 45px #00205b24;overflow:hidden}.helper-header{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:14px 16px;background:var(--surface);border-top:3px solid var(--navy);border-bottom:1px solid var(--line)}.helper-header h2{font-size:14px;color:var(--navy)}.helper-header p{font-size:12px;color:var(--muted);margin-top:3px}.helper-log{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:15px;display:flex;flex-direction:column;gap:12px;background:var(--paper)}.helper-message{max-width:95%;align-self:flex-start;padding:10px 12px;background:var(--surface);border-radius:4px;font-size:13.5px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}.helper-message.user{align-self:flex-end;background:var(--accent-tint);color:var(--navy)}.helper-options{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.helper-options button{padding:6px 8px;font-size:12px;text-align:left;max-width:100%;overflow-wrap:anywhere;border:1px solid var(--line-strong);border-radius:3px;background:var(--paper)}.helper-options button:hover{background:var(--accent-tint)}.helper-options button.primary{background:var(--navy);border-color:var(--navy);color:var(--on-accent)}.helper-suggestions{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px;border-top:1px solid var(--line)}.helper-suggestions button{padding:5px 8px;border:1px solid var(--line-strong);border-radius:3px;color:var(--muted);font-size:12px;background:var(--surface)}.helper-form{display:flex;gap:8px;align-items:flex-end;padding:10px 12px;border-top:1px solid var(--line)}.helper-form textarea{flex:1;min-width:0;height:62px;padding:9px 10px;resize:none;border:1px solid var(--line-strong);border-radius:3px;font-size:13.5px;line-height:1.6}.helper-form .btn{padding:7px 10px;height:35px}.helper-footnote{padding:0 12px 11px;font-size:11px;color:var(--muted);line-height:1.6}.helper-preview{padding:10px;background:var(--paper);border:1px solid var(--line-strong);border-radius:3px;margin-top:9px;white-space:normal}.helper-preview strong{display:block;font-size:13.5px;margin:3px 0 6px}.helper-preview small{display:block;font-size:12px}
+@media(min-width:1600px){.main{padding:38px 46px 85px}.layout{grid-template-columns:minmax(0,1fr) 270px;gap:38px}.entry-list-head,.entry-row{grid-template-columns:25px 105px minmax(140px,1fr) 140px 85px 28px}}
+@media(max-width:1190px){.layout{grid-template-columns:1fr}.stack{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin-top:25px}.stack>.panel:last-child{grid-column:1/-1}.main{padding:27px 27px 80px}}
+@media(max-width:920px){.app{grid-template-columns:185px minmax(0,1fr)}.sidebar{padding:25px 12px}.main{padding:26px 21px 80px}.entry-list-head,.entry-row{grid-template-columns:22px 86px minmax(110px,1fr) 69px 25px;gap:9px}.entry-space,.entry-course-heading{display:none}.entry-mobile-space{display:inline}.cards{grid-template-columns:1fr}.stats{gap:12px}.stat{padding-right:7px}.stat strong{font-size:23px}.calendar-cell{min-height:113px;padding:4px}.calendar-entry{font-size:11px}.calendar-weekday{padding:9px 5px}}
+@media(max-width:680px){.app{display:block;border-top-width:4px}.sidebar{padding:17px 15px 0;gap:15px;border:0;border-bottom:1px solid var(--line)}.brand{padding:0;gap:9px}.brand-name{font-size:16px}.brand-name br{display:none}.brand-name br:after{content:' '}.brand-caption{display:inline;margin-left:8px;font-size:12px}.logo{width:26px;height:30px;font-size:20px}.nav{display:flex;overflow-x:auto;gap:2px;max-width:100%;padding-bottom:0;scrollbar-width:thin}.nav button{padding:10px 10px 12px;border-left:0;border-bottom:2px solid transparent;white-space:nowrap;font-size:12.5px;flex-shrink:0}.nav button.active{border-bottom-color:var(--navy);background:var(--accent-tint)}.space-keys,.side-bottom{display:none}.main{padding:23px 16px 80px}.top{padding-bottom:18px;margin-bottom:17px}h1{font-size:30px}.top .eyebrow{font-size:12px;margin-bottom:6px}.btn{padding:8px 10px;font-size:12.5px}.stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:22px;padding-bottom:15px}.stat-top{font-size:12px}.stat small{font-size:11px;line-height:1.6}.stat strong{font-size:22px}.panel-head{gap:6px}.panel-head small{font-size:11px}.toolbar{gap:7px}.toolbar input{flex-basis:100%}.toolbar select{flex:1;min-width:0}.entry-list-head,.entry-row{grid-template-columns:20px 83px minmax(0,1fr) 25px;gap:9px}.entry-status,.entry-status-heading{display:none}.entry-mobile-priority{display:inline}.entry-list-head{font-size:11px}.entry-row{padding:13px 0;min-height:80px}.task-title{font-size:13.5px}.entry-deadline strong{font-size:13.5px}.entry-day{font-size:12px}.entry-detail{font-size:11px;line-height:1.7}.entry-group-title{font-size:11px;padding:7px 9px}.stack{grid-template-columns:1fr;gap:23px}.stack>.panel:last-child{grid-column:auto}.footer{align-items:flex-start;flex-direction:column;gap:8px;font-size:11px}.mobile-backup{display:flex;gap:14px}.sample{font-size:12px;align-items:flex-start}.sample button{font-size:12px}.week-controls{gap:6px}.week-controls strong{font-size:14.5px}.week-grid{grid-template-columns:repeat(7,145px)}.day{min-height:290px}.calendar-cell{min-height:104px;padding:3px}.calendar-entry{font-size:11px;padding:3px;min-height:22px}.calendar-weekday{font-size:11px;padding:9px 4px}.calendar-date{min-width:25px;min-height:25px;font-size:12px;padding:3px}.calendar-add{gap:5px}.calendar-add .btn{font-size:12px;padding:6px 8px;min-height:30px}.form-body,.dialog-head{padding:17px}.dialog-actions{padding:14px 17px}.field input,.field select,.field textarea,.helper-form textarea{font-size:16px}.form-row{gap:10px}.helper-launcher{bottom:14px;right:15px;padding:9px 12px;font-size:12.5px}.helper-panel{right:11px;bottom:60px;width:calc(100vw - 22px);max-width:none;height:550px;max-height:calc(100vh - 78px);max-height:calc(100dvh - 78px)}.toast{bottom:65px;max-width:calc(100vw - 28px)}}
+@media(max-width:360px){.main{padding-left:12px;padding-right:12px}.entry-list-head,.entry-row{grid-template-columns:18px 75px minmax(85px,1fr) 22px;gap:7px}.stats{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:12px}.stat:nth-child(2){border:0}.brand-caption{display:none}.entry-deadline strong{font-size:12.5px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+/* ---------- Added: theme toggle, undo toast, shortcuts, repeat picker, drag & drop, time-grid week ---------- */
+dialog{background:var(--paper)}
+.side-tools{display:flex;flex-wrap:wrap;gap:15px;margin-top:12px}
+kbd{font:600 11px/1 ui-monospace,Consolas,monospace;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;padding:2px 6px;background:var(--surface);color:var(--ink)}
+.toast{display:flex;align-items:center;gap:16px}
+.toast button{color:var(--on-accent);font-weight:700;text-decoration:underline;text-underline-offset:3px;padding:0}
+.shortcut-list{display:grid;grid-template-columns:auto 1fr;gap:12px 18px;padding:20px 22px 24px;margin:0;align-items:center}
+.shortcut-list dd{margin:0;color:var(--muted);font-size:13.5px}
+fieldset.field{border:0;padding:0;margin:0;min-width:0}
+fieldset.field legend{padding:0;margin-bottom:7px}
+.weekday-picks{display:flex;gap:6px;flex-wrap:wrap}
+.weekday-pick{position:relative}
+.weekday-pick input{position:absolute;opacity:0;width:1px;height:1px}
+.weekday-pick span{display:grid;place-items:center;width:38px;height:38px;border:1px solid var(--line-strong);border-radius:50%;font-weight:600;font-size:12.5px;cursor:pointer;background:var(--paper);user-select:none}
+.weekday-pick span:hover{border-color:var(--navy)}
+.weekday-pick input:checked+span{background:var(--navy);border-color:var(--navy);color:var(--on-accent)}
+.weekday-pick input:focus-visible+span{outline:2px solid var(--focus);outline-offset:2px}
+[draggable=true]{cursor:grab}
+.dragging{opacity:.4}
+.drop-target{background-color:var(--accent-tint)!important;box-shadow:inset 0 0 0 2px var(--accent)}
+.tg{border:1px solid var(--line);overflow-x:auto;background:var(--paper)}
+.tg-inner{min-width:780px}
+.tg-head,.tg-allday,.tg-body{display:grid;grid-template-columns:58px repeat(7,minmax(0,1fr))}
+.tg-head,.tg-allday{overflow-y:hidden;scrollbar-gutter:stable}
+.tg-scroll{max-height:620px;overflow-y:auto;scrollbar-gutter:stable;border-top:1px solid var(--line)}
+.tg-dayhead{display:flex;align-items:center;justify-content:space-between;gap:4px;padding:6px 6px 6px 10px;border-left:1px solid var(--line)}
+.tg-dayhead small{text-transform:uppercase;font-size:11px;letter-spacing:.4px;color:var(--muted)}
+.tg-dayhead strong{font:400 22px Georgia,serif;color:var(--navy)}
+.tg-dayhead.current{background:var(--accent-tint)}
+.tg-dayhead.current strong{font-weight:700}
+.tg-allday{border-top:1px solid var(--line)}
+.tg-allday-label{font-size:11px;color:var(--muted);padding:8px 8px 0 0;text-align:right}
+.tg-allday-cell{border-left:1px solid var(--line);padding:5px;min-height:46px;display:grid;gap:4px;align-content:start;min-width:0}
+.tg-chip{display:block;width:100%;min-width:0;text-align:left;font-size:12px;padding:4px 6px;border-left:3px solid var(--course);background:var(--surface);border-radius:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tg-chip:hover{background:var(--hover)}
+.tg-chip.assignment{border-left-style:dashed}
+.tg-chip.exam{background:var(--accent-tint);font-weight:600}
+.tg-body{position:relative}
+.tg-gutter{position:relative}
+.tg-hour{position:absolute;right:8px;transform:translateY(-50%);font-size:11px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.tg-hour:first-child{transform:none;padding-top:2px}
+.tg-col{position:relative;min-width:0;border-left:1px solid var(--line);cursor:cell;background-image:repeating-linear-gradient(to bottom,var(--line-soft) 0,var(--line-soft) 1px,transparent 1px,transparent var(--hour))}
+.tg-col.current{background-color:var(--accent-tint)}
+.tg-event{position:absolute;display:flex;flex-direction:column;gap:1px;text-align:left;padding:3px 6px;border-left:3px solid var(--course);background:color-mix(in srgb,var(--course) 20%,var(--paper));border-radius:3px;overflow:hidden;font-size:12px;line-height:1.3;color:var(--ink);box-shadow:0 0 0 1px var(--paper);z-index:1}
+.tg-event:hover{background:color-mix(in srgb,var(--course) 32%,var(--paper))}
+.tg-event strong{font-weight:600;overflow-wrap:anywhere}
+.tg-event small{font-size:11px;color:var(--muted)}
+.tg-now{position:absolute;left:0;right:0;height:2px;background:var(--now);pointer-events:none;z-index:2}
+.tg-now:before{content:'';position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--now)}
+.gcal-box{margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+#gcal-dialog{width:min(600px,calc(100% - 28px))}
+.gcal-steps{margin:10px 0 0;padding-left:20px;font-size:13px;line-height:1.7;color:var(--ink)}
+.gcal-steps li{margin-bottom:6px}
+.gcal-steps a{color:var(--navy)}
+code{font:12px ui-monospace,Consolas,monospace;background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:1px 5px;overflow-wrap:anywhere}
+.check-row{display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.5}
+.check-row input{margin-top:3px;width:16px;height:16px;flex-shrink:0}
+.gcal-state{font-size:13px;font-weight:600;color:var(--navy)}
+.gcal-actions{display:flex;gap:8px;flex-wrap:wrap}
+.gcal-note{color:var(--accent)}
+.danger-notice{background:var(--danger-tint);border-left-color:var(--red)}
+details>summary{cursor:pointer}
+@media(max-width:680px){.tg-inner{min-width:720px}.tg-scroll{max-height:520px}.mobile-backup{flex-wrap:wrap}}
+
+</style></head><body>
+<div class="app"><aside class="sidebar"><div class="brand"><span class="logo">G</span><span class="brand-name">Gilbert’s Planner<span class="brand-caption">Academic organizer</span></span></div><nav class="nav" aria-label="Planner"><button data-view="today">Overview</button><button data-view="tasks">Tasks</button><button data-view="calendar">Calendar</button><button data-view="week">Week</button><button data-view="meetings">Meetings</button><button data-view="exams">Exam prep</button><button data-view="spaces">Spaces</button></nav><div class="space-keys"><div class="space-heading"><span class="eyebrow">Your spaces</span><button class="icon-btn" data-view="spaces" aria-label="Manage spaces">⚙</button></div><div id="space-keys"></div></div><div class="side-bottom"><div class="gcal-box"><strong style="color:var(--ink)">Google Calendar</strong><p id="gcal-status" style="margin-top:6px">Not connected</p><div class="backup"><button class="text-button" data-action="gcal-open">Set up</button><button class="text-button" data-action="gcal-sync" id="gcal-side-sync" hidden>Sync now</button></div></div><strong style="color:var(--ink)">Planner backup</strong><p style="margin-top:8px">Export a copy before changing devices. Your planner saves in this browser when available.</p><div class="backup"><button class="text-button" data-action="export">Export</button><button class="text-button" data-action="import">Import</button></div><div class="side-tools"><button class="text-button" data-action="theme">Theme: System</button><button class="text-button" data-action="shortcuts">Shortcuts <kbd>?</kbd></button></div></div></aside><main class="main"><header class="top"><div><div class="eyebrow" id="date-label"></div><h1 id="page-title"></h1></div><button class="btn primary" id="main-add" data-action="add-task">+ Add task</button></header><div id="sample-banner"></div><div id="content"></div><footer class="footer"><span id="save-status" role="status"></span><div class="mobile-backup"><button class="text-button" data-action="export">Export backup</button><button class="text-button" data-action="import">Import backup</button><button class="text-button" data-action="theme">Theme: System</button><button class="text-button" data-action="gcal-open">Google sync</button></div><span>Dates and times use this device’s settings.</span></footer></main></div>
+<dialog id="editor" aria-labelledby="dialog-title"><form id="editor-form"><div class="dialog-head"><h2 id="dialog-title"></h2><button type="button" class="icon-btn" data-action="close" aria-label="Close editor">✕</button></div><div class="form-body" id="form-fields"></div><div class="dialog-actions"><button class="btn danger" type="button" id="delete-button">Delete</button><div><button class="btn" type="button" data-action="close">Cancel</button><button class="btn primary" type="submit">Save changes</button></div></div></form></dialog><dialog id="gcal-dialog" aria-labelledby="gcal-title"><div class="dialog-head"><h2 id="gcal-title">Google Calendar sync</h2><button type="button" class="icon-btn" data-action="gcal-close" aria-label="Close Google Calendar settings">✕</button></div><div class="form-body" id="gcal-body"></div></dialog><dialog id="shortcuts-dialog" aria-labelledby="shortcuts-title"><div class="dialog-head"><h2 id="shortcuts-title">Keyboard shortcuts</h2><button type="button" class="icon-btn" data-action="close-shortcuts" aria-label="Close shortcuts">✕</button></div><dl class="shortcut-list"><dt><kbd>N</kbd></dt><dd>Add a new entry for the current view</dd><dt><kbd>/</kbd></dt><dd>Search tasks</dd><dt><kbd>Q</kbd></dt><dd>Open quick entry &amp; help</dd><dt><kbd>U</kbd></dt><dd>Undo the last change</dd><dt><kbd>T</kbd></dt><dd>Jump to today</dd><dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Previous / next week or month</dd><dt><kbd>1</kbd>–<kbd>7</kbd></dt><dd>Switch views (Overview … Spaces)</dd><dt><kbd>?</kbd></dt><dd>Show this list</dd></dl></dialog><input type="file" id="import-file" accept=".json,application/json" hidden><div class="toast" id="toast" role="status" hidden></div>
+<button class="helper-launcher" id="helper-toggle" aria-expanded="false" aria-controls="helper-panel">Quick entry & help</button>
+<section class="helper-panel" id="helper-panel" aria-labelledby="helper-title" hidden><header class="helper-header"><div><h2 id="helper-title">Planner helper</h2><p>Offline helper · tasks, meetings & priorities</p></div><button class="icon-btn" id="helper-close" aria-label="Close planner helper">✕</button></header><div class="helper-log" id="helper-log" role="log" aria-label="Planner helper conversation" aria-live="polite" aria-relevant="additions"></div><div class="helper-suggestions"><button type="button" data-chat-prompt="What should I prioritize?">Priorities</button><button type="button" data-chat-prompt="What's due this week?">Due this week</button><button type="button" data-chat-prompt="SGA meeting">Add a meeting</button><button type="button" data-chat-prompt="Help">Help</button></div><form class="helper-form" id="helper-form"><label class="sr-only" for="helper-input">Message your planner helper</label><textarea id="helper-input" maxlength="1000" placeholder="SGA meeting tomorrow from 6 to 7 pm…" rows="2"></textarea><button class="btn primary" type="submit">Send</button></form><p class="helper-footnote">Works offline. Dates use month/day. Missing years use the next occurrence. Chat resets on reload; saved entries stay.</p></section>
+
+<script>
+'use strict';
+/* Stable space IDs keep assignments, events, and exams linked when names change. */
+const $=s=>document.querySelector(s), esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>globalThis.crypto?.randomUUID?.()||'id-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
+const dateKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const parseDate=s=>new Date(s+'T12:00:00'),today=()=>dateKey(new Date());
+const offsetDate=(n,base=new Date())=>{const d=new Date(base);d.setDate(d.getDate()+n);return dateKey(d)};
+const diffDays=s=>Math.round((parseDate(s)-parseDate(today()))/86400000);
+const shortDate=s=>parseDate(s).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+const niceTime=t=>{const[h,m]=t.split(':').map(Number);return `${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'AM':'PM'}`};
+const DEFAULT_SPACES=[{id:'cpp',name:'C++ Programming',color:'#4c8cc9'},{id:'discrete',name:'Discrete Math',color:'#6280b9'},{id:'embedded',name:'Embedded Systems',color:'#828bc6'},{id:'personal',name:'Personal',color:'#56a5bf'}];
+const KEY='daymark-planner-v1'; // Keep the original key to migrate existing browser data.
+const initial=()=>({version:3,spaces:[...DEFAULT_SPACES.map(s=>({...s})),{id:'sga',name:'SGA',color:'#2879b8'}],sample:true,notes:'',tasks:[
+{id:uid(),title:'Practice mixed pointer problems',course:'cpp',date:offsetDate(0),priority:'high',done:false,notes:'Trace each line and track both the address and the value.'},
+{id:uid(),title:'Review expected value examples',course:'discrete',date:offsetDate(0),priority:'normal',done:false,notes:'Work through a weighted-average example without looking at the solution.'},
+{id:uid(),title:'Finish assembly practice set',course:'embedded',date:offsetDate(1),priority:'high',done:false,notes:''},
+{id:uid(),title:'Outline blackjack project next steps',course:'personal',date:offsetDate(2),priority:'normal',done:false,notes:''},
+{id:uid(),title:'Organize lecture notes',course:'cpp',date:offsetDate(0),priority:'low',done:true,notes:''}],events:[
+{id:uid(),title:'C++ study block',course:'cpp',date:offsetDate(0),start:'14:00',end:'15:00',location:'Library'},
+{id:uid(),title:'Discrete math review',course:'discrete',date:offsetDate(1),start:'11:00',end:'12:00',location:''},
+{id:uid(),title:'Project time',course:'personal',date:offsetDate(2),start:'16:00',end:'17:00',location:''},
+{id:uid(),title:'SGA general meeting',course:'sga',date:offsetDate(0),start:'18:00',end:'19:00',location:'Connelly Center',repeatDays:[3],repeatUntil:'',skipDates:[]}],exams:[
+{id:uid(),title:'Assembly quiz',course:'embedded',date:offsetDate(4),notes:'Try a few problems using only your reference sheet.',topics:[{id:uid(),title:'Registers and addressing',done:true},{id:uid(),title:'Signed vs. unsigned branches',done:false},{id:uid(),title:'Trace a loop by hand',done:false}]},
+{id:uid(),title:'Probability review',course:'discrete',date:offsetDate(7),notes:'',topics:[{id:uid(),title:'Conditional probability',done:true},{id:uid(),title:'Bayes with a 10,000-person example',done:false},{id:uid(),title:'Random variables and expected value',done:false}]}]});
+function validDate(s){if(typeof s!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(s))return false;const d=parseDate(s);return Number.isFinite(+d)&&dateKey(d)===s}
+const validTime=s=>typeof s==='string'&&/^([01]\d|2[0-3]):[0-5]\d$/.test(s), validID=s=>typeof s==='string'&&/^[\w-]{1,100}$/.test(s), validColor=s=>typeof s==='string'&&/^#[0-9a-f]{6}$/i.test(s);
+/* Google sync fields ride along on tasks/events; anything malformed is dropped rather than trusted. */
+function validGid(v){return typeof v==='string'&&/^[A-Za-z0-9_\-@.]{1,1024}$/.test(v)}
+function gKeep(x){const o={};if(validGid(x.gid))o.gid=x.gid;if(validGid(x.gInstanceOf))o.gInstanceOf=x.gInstanceOf;for(const k of ['gUpdated','gFp','gOrig'])if(typeof x[k]==='string'&&x[k].length<=20000)o[k]=x[k];for(const k of ['gComplex','gOff','gReadOnly','gRec'])if(x[k]===true)o[k]=true;if(Number.isFinite(x.mod))o.mod=x.mod;return o}
+function sanitizeSync(v){v=v&&typeof v==='object'?v:{};const str=(x,max)=>typeof x==='string'?x.slice(0,max):'';return{clientId:/^[\w.-]{1,200}$/.test(v.clientId||'')?v.clientId:'',calendarId:str(v.calendarId,300)||'primary',calendarName:str(v.calendarName,200),lastSync:Number.isFinite(v.lastSync)?v.lastSync:0,links:Object.fromEntries(Object.keys(v.links&&typeof v.links==='object'?v.links:{}).filter(validGid).slice(0,20000).map(k=>[k,1])),sendTasks:v.sendTasks!==false,connected:v.connected===true}}
+/* Version 1 backups use the four original spaces; version 2 includes editable spaces. */
+function validate(raw){
+ if(!raw||![1,2,3].includes(raw.version)||!['tasks','events','exams'].every(k=>Array.isArray(raw[k])&&raw[k].length<=2000))throw Error('This is not a supported planner backup.');
+ const original=raw.version===1?DEFAULT_SPACES:raw.spaces;
+ if(!Array.isArray(original)||!original.length||original.length>100)throw Error('A backup must contain between 1 and 100 spaces.');
+ const names=new Set(),ids=new Set(),spaces=original.map(s=>{
+  if(!s||!validID(s.id)||ids.has(s.id)||typeof s.name!=='string'||!s.name.trim()||s.name.trim().length>60||!validColor(s.color))throw Error('A space has an invalid name, color, or ID.');
+  const name=s.name.trim(),key=name.toLowerCase();if(names.has(key))throw Error('Space names must be unique.');names.add(key);ids.add(s.id);return{id:s.id,name,color:s.color};
+ });
+ const seen=new Set(ids),text=(s,max)=>typeof s==='string'?s.slice(0,max):'';
+ const newID=()=>{let id=uid();while(seen.has(id))id=uid();seen.add(id);return id};
+ const common=x=>{
+  if(!x||typeof x!=='object'||!text(x.title,160).trim()||!validDate(x.date)||!ids.has(x.course))throw Error('An entry has an invalid date, title, or space.');
+  let id=validID(x.id)&&!seen.has(x.id)?x.id:newID();seen.add(id);return{id,title:text(x.title,160),course:x.course,date:x.date,notes:text(x.notes,5000)};
+ };
+ return{version:3,spaces,sample:raw.sample===true,notes:text(raw.notes,10000),
+ sync:sanitizeSync(raw.sync),
+ tasks:raw.tasks.map(x=>{const item=common(x);if(x.dueTime!=null&&x.dueTime!==''&&!validTime(x.dueTime))throw Error('A task has an invalid due time.');return{...item,dueTime:x.dueTime||'',priority:['high','normal','low'].includes(x.priority)?x.priority:'normal',done:x.done===true,...gKeep(x)}}),
+ events:raw.events.map(x=>{if(!x||!validTime(x.start)||!validTime(x.end)||x.start>=x.end)throw Error('A schedule entry has invalid times.');const days=Array.isArray(x.repeatDays)?[...new Set(x.repeatDays.filter(d=>Number.isInteger(d)&&d>=0&&d<=6))].sort():[];return{...common(x),start:x.start,end:x.end,location:text(x.location,200),repeatDays:days,repeatUntil:days.length&&validDate(x.repeatUntil)?x.repeatUntil:'',skipDates:days.length&&Array.isArray(x.skipDates)?x.skipDates.filter(validDate).slice(0,1000):[],...gKeep(x)}}),
+ exams:raw.exams.map(x=>{if(!x||!Array.isArray(x.topics)||x.topics.length>100)throw Error('An exam checklist is invalid.');return{...common(x),topics:x.topics.map(t=>{if(!t||!text(t.title,200).trim())throw Error('A study topic is invalid.');return{id:validID(t.id)&&!seen.has(t.id)?(seen.add(t.id),t.id):newID(),title:text(t.title,200),done:t.done===true}})}})};
+}
+let data,storageOK=true,loadIssue='',blockedWrite=false;
+try{const saved=localStorage.getItem(KEY);data=saved?validate(JSON.parse(saved)):initial()}
+catch(e){data=initial();storageOK=false;blockedWrite=true;loadIssue='Could not load previous browser data. It has not been overwritten. Export any new work.'}
+let view='today',spaceFilter='all',statusFilter='open',query='',weekOffset=0,calendarMonth=today().slice(0,7)+'-01',selectedDate=today(),editing=null,toastTimer;
+const space=id=>data.spaces.find(s=>s.id===id);
+/* Undo: snapshot the whole planner right before a change, restore it from the toast or with U. */
+let undoSnapshot=null;
+function remember(){undoSnapshot=JSON.stringify(data)}
+function undoLast(){if(!undoSnapshot){toast('Nothing to undo.');return}try{data=validate(JSON.parse(undoSnapshot))}catch(e){toast('Could not undo that change.');return}undoSnapshot=null;save();render();toast('Change undone.')}
+/* Theme: System → Light → Dark. Stored per browser; if storage is blocked it simply resets. */
+const THEME_KEY='gilbert-planner-theme';let theme='system';try{theme=['light','dark'].includes(localStorage.getItem(THEME_KEY))?localStorage.getItem(THEME_KEY):'system'}catch(e){}
+function applyTheme(){
+ if(theme==='system')document.documentElement.removeAttribute('data-theme');else document.documentElement.dataset.theme=theme;
+ document.querySelectorAll('[data-action=theme]').forEach(b=>b.textContent='Theme: '+theme[0].toUpperCase()+theme.slice(1));
+ const dark=theme==='dark'||theme==='system'&&matchMedia('(prefers-color-scheme: dark)').matches;document.querySelector('meta[name=theme-color]').content=dark?'#10151d':'#00205b';
+}
+applyTheme();matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',applyTheme);
+/* Recurring events: one stored "series" expands into dated occurrences when a view needs them. */
+const WEEKDAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const isRecurring=e=>Array.isArray(e.repeatDays)&&e.repeatDays.length>0;
+function occursOn(e,date){if(!isRecurring(e))return e.date===date;return date>=e.date&&(!e.repeatUntil||date<=e.repeatUntil)&&e.repeatDays.includes(parseDate(date).getDay())&&!(e.skipDates||[]).includes(date)}
+/* Returns copies whose .date is the occurrence date; .id still points at the stored series. */
+function eventsOn(date,filter=relevant){return data.events.filter(e=>filter(e)&&occursOn(e,date)).map(e=>({...e,date})).sort((a,b)=>a.start.localeCompare(b.start))}
+function eventsBetween(from,days,filter=relevant){const out=[];for(let i=0;i<days;i++)out.push(...eventsOn(offsetDate(i,parseDate(from)),filter));return out}
+const repeatLabel=e=>isRecurring(e)?'Every '+e.repeatDays.map(d=>WEEKDAYS[d]).join(', ')+(e.repeatUntil?' until '+shortDate(e.repeatUntil):''):'';
+const toMin=t=>Number(t.slice(0,2))*60+Number(t.slice(3,5)),toKey=n=>`${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;
+const spaceLabel=id=>{const s=space(id);return `<span class="space-label"><span class="dot" style="--course:${s.color}"></span>${esc(s.name)}</span>`};
+function save(){stampChanges();if(!blockedWrite){try{localStorage.setItem(KEY,JSON.stringify(data));storageOK=true;loadIssue=''}catch(e){storageOK=false}}saveLabel();gQueue()}
+function saveLabel(){$('#save-status').textContent=loadIssue||(storageOK?'● Changes saved in this browser · no cross-device sync':'Browser saving unavailable · export a backup before closing')}
+/* Toasts can carry an Undo button when the change was snapshotted with remember(). */
+function toast(message,undoable=false){clearTimeout(toastTimer);const el=$('#toast');el.innerHTML=`<span>${esc(message)}</span>${undoable&&undoSnapshot?'<button type="button" data-action="undo-last">Undo</button>':''}`;el.hidden=false;toastTimer=setTimeout(()=>el.hidden=true,undoable?8000:4500)}
+const relevant=item=>spaceFilter==='all'||item.course===spaceFilter;
+function sortedTasks(items){const rank={high:0,normal:1,low:2};return [...items].sort((a,b)=>Number(a.done)-Number(b.done)||a.date.localeCompare(b.date)||(a.dueTime||'24:00').localeCompare(b.dueTime||'24:00')||rank[a.priority]-rank[b.priority])}
+function due(date){const n=diffDays(date);return n<0?`${Math.abs(n)}d overdue`:n===0?'Due today':n===1?'Tomorrow':shortDate(date)}
+/* Dates and times are local to this device. An untimed task stays date-only. */
+function taskDueAt(t){return new Date(t.date+'T'+(validTime(t.dueTime)?t.dueTime+':00':'23:59:59.999')).getTime()}
+function taskOverdue(t){return !t.done&&Date.now()>=taskDueAt(t)}
+function taskExactDue(t){return fullDate(t.date)+(validTime(t.dueTime)?' at '+niceTime(t.dueTime):' · no time set')}
+function taskDueLabel(t){const time=validTime(t.dueTime)?' · '+niceTime(t.dueTime):'';if(t.done)return shortDate(t.date)+time;if(taskOverdue(t)&&diffDays(t.date)===0)return 'Overdue · today'+time;return due(t.date)+time}
+
+function empty(title,message,action,label){return `<div class="empty"><strong>${title}</strong>${message}${action?`<br><button class="btn" data-action="${action}">${label}</button>`:''}</div>`}
+function spaceOptions(selected='all',includeAll=true,exclude=null){return `${includeAll?'<option value="all">All spaces</option>':''}${data.spaces.filter(s=>s.id!==exclude).map(s=>`<option value="${s.id}" ${selected===s.id?'selected':''}>${esc(s.name)}</option>`).join('')}`}
+/* Agenda rows use one date column across tasks, exams, and meetings. */
+function entryDeadline(date,time='',late=false,label='No time set'){
+ const day=parseDate(date).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+ return `<div class="entry-deadline ${late?'late':''}" title="${esc(fullDate(date)+(time?' at '+niceTime(time):''))}"><span class="entry-day">${esc(day)}</span><strong class="${time?'':'no-time'}">${time?niceTime(time):esc(label)}</strong></div>`;
+}
+function entryListHead(){return '<div class="entry-list-head" aria-hidden="true"><span></span><span>Date / time</span><span>Task / event</span><span class="entry-course-heading">Course / space</span><span class="entry-status-heading">Status</span><span></span></div>'}
+function taskRow(t){
+ const priority=t.priority==='normal'?'Medium':t.priority==='high'?'High':'Low';
+ return `<div class="task entry-row ${t.done?'completed':''}"><button class="check ${t.done?'checked':''}" data-action="toggle-task" data-id="${t.id}" aria-label="${t.done?'Reopen':'Complete'} ${esc(t.title)}" aria-pressed="${t.done}">${t.done?'✓':''}</button>${entryDeadline(t.date,t.dueTime||'',taskOverdue(t))}<div class="task-content"><button class="task-title" data-action="edit-task" data-id="${t.id}">${esc(t.title)}</button><div class="entry-detail"><span class="entry-mobile-space">${esc(space(t.course).name)} · </span>Task<span class="entry-mobile-priority"> · ${t.done?'Completed':priority+' priority'}</span></div></div><div class="entry-space">${spaceLabel(t.course)}</div><span class="tag entry-status ${t.priority}">${t.done?'Completed':priority}</span><button class="icon-btn" data-action="edit-task" data-id="${t.id}" aria-label="Edit ${esc(t.title)}">✎</button></div>`;
+}
+
+function filters(){return `<div class="toolbar"><input type="search" id="task-search" aria-label="Search entries" placeholder="Find an entry…" value="${esc(query)}"><select id="space-filter" aria-label="Filter by space">${spaceOptions(spaceFilter)}</select><select id="status-filter" aria-label="Filter by completion"><option value="open" ${statusFilter==='open'?'selected':''}>To do</option><option value="all" ${statusFilter==='all'?'selected':''}>${view==='today'?'All entries':'All tasks'}</option><option value="done" ${statusFilter==='done'?'selected':''}>Completed</option></select></div>`}
+/* Overview and helper share one ranking, including future tasks and exam prep. */
+function examPriorityRow(e){
+ const reviewed=e.topics.filter(t=>t.done).length,complete=e.topics.length>0&&reviewed===e.topics.length;
+ return `<div class="task entry-row ${complete?'completed':''}"><button class="entry-marker" data-action="edit-exam" data-id="${e.id}" aria-label="Open exam ${esc(e.title)}">EX</button>${entryDeadline(e.date,'',false,'Exam')}<div class="task-content"><button class="task-title" data-action="edit-exam" data-id="${e.id}">${esc(e.title)}</button><div class="entry-detail"><span class="entry-mobile-space">${esc(space(e.course).name)} · </span>${e.topics.length?`${reviewed}/${e.topics.length} topics reviewed`:'Exam · add review topics'}</div></div><div class="entry-space">${spaceLabel(e.course)}</div><span class="tag entry-status">${complete?'Prepared':'Exam'}</span><button class="icon-btn" data-action="edit-exam" data-id="${e.id}" aria-label="Edit ${esc(e.title)}">✎</button></div>`;
+}
+function agendaEventRow(e){return `<div class="task entry-row"><button class="entry-marker" data-action="edit-event" data-id="${e.id}" data-occ="${e.date}" aria-label="Open meeting ${esc(e.title)}">MT</button>${entryDeadline(e.date,e.start)}<div class="task-content"><button class="task-title" data-action="edit-event" data-id="${e.id}" data-occ="${e.date}">${esc(e.title)}</button><div class="entry-detail"><span class="entry-mobile-space">${esc(space(e.course).name)} · </span>${isRecurring(e)?'↻ ':''}Until ${niceTime(e.end)}${e.location?' · '+esc(e.location):''}</div></div><div class="entry-space">${spaceLabel(e.course)}</div><span class="tag entry-status">Meeting</span><button class="icon-btn" data-action="edit-event" data-id="${e.id}" data-occ="${e.date}" aria-label="Edit ${esc(e.title)}">✎</button></div>`}
+function groupedEntries(entries){
+ const groups=[{name:'Overdue',style:'overdue',items:[]},{name:'Today',style:'today',items:[]},{name:'Tomorrow',style:'',items:[]},{name:'Next 7 days',style:'',items:[]},{name:'Later',style:'',items:[]},{name:'Completed',style:'',items:[]}];
+ for(const r of entries){const x=r.item,days=diffDays(x.date),done=r.type==='task'?x.done:r.type==='exam'&&x.topics.length>0&&x.topics.every(t=>t.done),index=done?5:r.type==='task'&&taskOverdue(x)?0:days<=0?1:days===1?2:days<=6?3:4;groups[index].items.push(r)}
+ return groups.filter(g=>g.items.length).map(g=>{g.items.sort((a,b)=>a.item.date.localeCompare(b.item.date)||(a.item.dueTime||a.item.start||'24:00').localeCompare(b.item.dueTime||b.item.start||'24:00'));return `<section class="entry-group ${g.style}" aria-label="${g.name}"><h3 class="entry-group-title">${g.name}<small>${g.items.length} ${g.items.length===1?'entry':'entries'}</small></h3>${g.items.map(r=>r.type==='exam'?examPriorityRow(r.item):r.type==='event'?agendaEventRow(r.item):taskRow(r.item)).join('')}</section>`}).join('');
+}
+function taskList(){
+ const search=query.trim().toLowerCase(),matches=x=>relevant(x)&&(x.title.toLowerCase().includes(search)||(x.notes||'').toLowerCase().includes(search));
+ if(view==='today'){
+  const ranked=prioritySuggestions(Infinity).filter(r=>matches(r.item));
+  const completed=[...sortedTasks(data.tasks.filter(t=>t.done)).map(item=>({type:'task',item})),...data.exams.filter(e=>diffDays(e.date)>=0&&e.topics.length>0&&e.topics.every(t=>t.done)).map(item=>({type:'exam',item}))].filter(r=>matches(r.item));
+  const entries=statusFilter==='done'?completed:statusFilter==='all'?[...ranked,...completed]:ranked;
+  return groupedEntries(entries)||empty('No matching entries.','Add a task or change the filters.','add-task','Add a task');
+ }
+ const tasks=sortedTasks(data.tasks.filter(matches).filter(t=>statusFilter==='all'||(statusFilter==='done'?t.done:!t.done)));
+ return groupedEntries(tasks.map(item=>({type:'task',item})))||empty('No matching tasks.','Add a task or change the filters.','add-task','Add a task');
+}
+
+function renderTaskList(){const el=$('#task-list');if(el)el.innerHTML=taskList()}
+function stats(){
+ const open=data.tasks.filter(t=>!t.done),exams=data.exams.filter(e=>diffDays(e.date)>=0&&(!e.topics.length||e.topics.some(t=>!t.done)));
+ const values=[['Overdue',open.filter(taskOverdue).length,'Tasks past deadline','overdue-count'],['Due today',open.filter(t=>t.date===today()).length+exams.filter(e=>e.date===today()).length,'Tasks & exams',''],['Next 7 days',[...open,...exams].filter(t=>diffDays(t.date)>=0&&diffDays(t.date)<=6).length,'Including today',''],['Completed',data.tasks.filter(t=>t.done).length,'Tasks checked off','']];
+ return `<div class="stats" aria-label="Assignment summary">${values.map(([label,n,sub,style])=>`<div class="stat ${style}"><div class="stat-top">${label}</div><strong>${n}</strong><small>${sub}</small></div>`).join('')}</div>`;
+}
+
+function eventRow(e,showDate=false){return `<div class="event-item"><span class="event-line" style="--course:${space(e.course).color}"></span><div class="event-info"><strong>${esc(e.title)}</strong><small>${showDate?esc(shortDate(e.date))+' · ':''}${niceTime(e.start)} – ${niceTime(e.end)}${e.location?' · '+esc(e.location):''}</small><small>${esc(space(e.course).name)}${isRecurring(e)?' · ↻ repeats':''}</small></div><button class="icon-btn" data-action="edit-event" data-id="${e.id}" data-occ="${e.date}" aria-label="Edit ${esc(e.title)}">✎</button></div>`}
+function todaySide(){const events=eventsOn(today(),()=>true),upcoming=eventsBetween(offsetDate(1),60,()=>true).slice(0,3),next=data.exams.filter(e=>diffDays(e.date)>=0).sort((a,b)=>a.date.localeCompare(b.date))[0],complete=next?next.topics.filter(t=>t.done).length:0;return `<div class="stack"><section class="panel"><div class="panel-head"><h2>Meetings & events</h2><button class="text-button" data-action="add-meeting">+ Meeting</button></div><div class="small-body">${events.length?events.map(e=>eventRow(e)).join(''):'<p class="muted" style="font-size:12px">No meetings scheduled today.</p>'}${upcoming.length?`<p class="eyebrow" style="margin-top:18px">Coming up</p>${upcoming.map(e=>eventRow(e,true)).join('')}`:''}<button class="text-button" data-view="meetings" style="margin-top:12px">All meetings & events →</button></div></section><section class="panel"><div class="panel-head"><h2>Notes</h2><small></small></div><div class="small-body"><label class="sr-only" for="quick-notes">Notes</label><textarea class="notes" id="quick-notes" maxlength="10000" placeholder="Notes and reminders…">${esc(data.notes)}</textarea></div></section>${next?`<section class="panel"><div class="small-body"><div class="eyebrow">Next exam</div><h2 style="margin-top:9px">${esc(next.title)}</h2><p class="muted" style="font-size:11px;margin-top:5px">${shortDate(next.date)} · ${complete}/${next.topics.length} topics reviewed</p><div class="progress"><span style="width:${next.topics.length?complete/next.topics.length*100:0}%"></span></div><button class="text-button" data-view="exams" style="margin-top:9px">Open study checklist →</button></div></section>`:''}</div>`}
+function sgaSpace(){return data.spaces.find(s=>/\bsga\b|student government/i.test(s.name))}
+function ensureSGASpace(){let s=sgaSpace();if(!s&&data.spaces.length<100){s={id:uid(),name:'SGA',color:'#2879b8'};data.spaces.push(s);save()}return s}
+function renderMeetings(){const upcoming=eventsBetween(today(),60),series=data.events.filter(e=>relevant(e)&&isRecurring(e)),past=data.events.filter(e=>relevant(e)&&!isRecurring(e)&&e.date<today()).sort((a,b)=>b.date.localeCompare(a.date)||b.start.localeCompare(a.start));$('#content').innerHTML=`<div class="view-tools"><p class="muted" style="font-size:12px">Keep SGA meetings, appointments, and study blocks in one place.</p><select id="space-filter" class="space-filter" aria-label="Filter by space">${spaceOptions(spaceFilter)}</select></div>${series.length?`<section class="panel" style="margin-bottom:24px"><div class="panel-head"><h2>Repeating events</h2><small>${series.length} weekly series</small></div><div class="small-body">${series.map(e=>`<div class="event-item"><span class="event-line" style="--course:${space(e.course).color}"></span><div class="event-info"><strong>${esc(e.title)}</strong><small>↻ ${esc(repeatLabel(e))} · ${niceTime(e.start)} – ${niceTime(e.end)}${e.location?' · '+esc(e.location):''}</small><small>${esc(space(e.course).name)} · starts ${esc(shortDate(e.date))}</small></div><button class="icon-btn" data-action="edit-event" data-id="${e.id}" aria-label="Edit ${esc(e.title)}">✎</button></div>`).join('')}</div></section>`:''}<section class="panel"><div class="panel-head"><h2>Upcoming meetings & events</h2><small>${upcoming.length} in the next 60 days</small></div><div class="small-body">${upcoming.length?upcoming.map(e=>eventRow(e,true)).join(''):empty('No meetings scheduled.','Add your next meeting here or through the planner helper.','add-meeting','Add a meeting')}</div></section>${past.length?`<details style="margin-top:20px"><summary class="text-button">Past meetings & events (${past.length})</summary><section class="panel" style="margin-top:12px"><div class="small-body">${past.map(e=>eventRow(e,true)).join('')}</div></section></details>`:''}`}
+
+function render(){
+ const titles={today:'Agenda',tasks:'Tasks',week:'Weekly schedule',exams:'Exam preparation',spaces:'Courses & spaces',meetings:'Meetings',calendar:'Calendar'};$('#page-title').textContent=titles[view];$('#date-label').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+ document.querySelectorAll('.nav button').forEach(b=>{b.classList.toggle('active',b.dataset.view===view);if(b.dataset.view===view)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+ const kind={exams:'exam',week:'event',meetings:'meeting',spaces:'space'}[view]||'task';$('#main-add').dataset.action='add-'+kind;$('#main-add').textContent='+ Add '+kind;$('#main-add').dataset.date=view==='calendar'?selectedDate:today();
+ $('#space-keys').innerHTML=data.spaces.map(s=>`<button class="space-key" data-action="show-space" data-id="${s.id}"><span class="dot" style="--course:${s.color}"></span><span>${esc(s.name)}</span></button>`).join('');
+ $('#sample-banner').innerHTML=data.sample?'<div class="sample"><span><strong>Example plan.</strong> Edit these entries, or start fresh. Spaces stay editable.</span><button data-action="clear-samples">Start fresh</button></div>':'';
+ if(view==='today'||view==='tasks'){$('#content').innerHTML=stats()+`<div class="${view==='today'?'layout':''}"><section class="panel"><div class="panel-head"><h2>${view==='today'?'Assignments & schedule':'Task list'}</h2><small>Grouped by deadline · times are local</small></div>${filters()}${entryListHead()}<div id="task-list">${taskList()}</div></section>${view==='today'?todaySide():''}</div>`}
+ else if(view==='week')renderWeek();else if(view==='exams')renderExams();else if(view==='meetings')renderMeetings();else if(view==='calendar')renderCalendar();else renderSpaces();saveLabel();
+}
+function weekStart(){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-d.getDay()+weekOffset*7);return d}
+/* Month view shares the same entries as Overview, Week, and the helper. */
+function renderCalendar(){
+ $('#main-add').dataset.date=selectedDate;
+ const first=parseDate(calendarMonth),offset=first.getDay(),start=offsetDate(-offset,first),monthLabel=first.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+ const tasks=sortedTasks(data.tasks.filter(t=>t.date===selectedDate&&relevant(t))),exams=data.exams.filter(e=>e.date===selectedDate&&relevant(e)),events=eventsOn(selectedDate);
+ const chip=(x,type)=>`<button class="calendar-entry ${type==='task'&&x.done?'finished':''}" style="--course:${space(x.course).color}" draggable="true" data-drag="${type}" data-action="edit-${type}" data-id="${x.id}" data-occ="${x.date}" title="${esc(x.title)}${type==='event'?' · '+niceTime(x.start)+'–'+niceTime(x.end):type==='task'?' · '+esc(taskExactDue(x)):''}">${type==='exam'?'◇ ':type==='event'?niceTime(x.start)+' ':type==='task'&&x.dueTime?niceTime(x.dueTime)+' · ':x.done?'✓ ':'• '}${esc(x.title)}</button>`;
+ $('#content').innerHTML=`<div class="view-tools"><div class="week-controls"><button class="btn" data-action="prev-month" aria-label="Previous month">←</button><strong>${esc(monthLabel)}</strong><button class="btn" data-action="next-month" aria-label="Next month">→</button><button class="btn" data-action="current-month">Today</button></div><select id="space-filter" class="space-filter" aria-label="Filter by space">${spaceOptions(spaceFilter)}</select></div><section class="panel calendar-panel" aria-label="${esc(monthLabel)} calendar"><div class="calendar-grid">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="calendar-weekday">${d}</div>`).join('')}${Array.from({length:42},(_,i)=>{
+  const date=offsetDate(i,parseDate(start)),outside=date.slice(0,7)!==calendarMonth.slice(0,7),dayEvents=eventsOn(date),dayExams=data.exams.filter(e=>e.date===date&&relevant(e)),dayTasks=sortedTasks(data.tasks.filter(t=>t.date===date&&relevant(t))),entries=[...dayEvents.map(x=>({x,type:'event'})),...dayExams.map(x=>({x,type:'exam'})),...dayTasks.map(x=>({x,type:'task'}))];
+  return `<div class="calendar-cell ${outside?'outside':''} ${date===today()?'is-today':''} ${date===selectedDate?'selected':''}" data-drop-date="${date}"><button class="calendar-date" data-action="calendar-day" data-date="${date}" aria-pressed="${date===selectedDate}" aria-label="${esc(fullDate(date))}, ${entries.length} entries">${parseDate(date).getDate()}</button>${entries.slice(0,3).map(({x,type})=>chip(x,type)).join('')}${entries.length>3?`<button class="calendar-more" data-action="calendar-day" data-date="${date}">+${entries.length-3} more</button>`:''}</div>`
+ }).join('')}</div></section><section class="panel calendar-agenda"><div class="panel-head"><div><div class="eyebrow">Selected day</div><h2>${esc(fullDate(selectedDate))}</h2></div><div class="calendar-add"><button class="btn" data-action="add-task" data-date="${selectedDate}">+ Task</button><button class="btn primary" data-action="add-meeting" data-date="${selectedDate}">+ Meeting</button><button class="btn" data-action="add-exam" data-date="${selectedDate}">+ Exam</button></div></div><div class="small-body">${events.map(e=>eventRow(e)).join('')}${exams.map(examPriorityRow).join('')}${tasks.map(taskRow).join('')}${!events.length&&!exams.length&&!tasks.length?'<p class="muted">Nothing scheduled. Add an entry above for this date.</p>':''}</div></section><p class="week-note">Select a date to see its entries or add something new. Select an entry to edit it, or drag it to another day. Colors identify courses and spaces.</p>`;
+}
+function moveCalendar(months){const date=parseDate(calendarMonth);date.setMonth(date.getMonth()+months);calendarMonth=dateKey(date);selectedDate=calendarMonth;renderCalendar()}
+function answerSchedule(text){
+ const parsed=chatDate(text),isWeek=/week/i.test(text),isSGA=/\bsga\b|student government/i.test(text),isNext=/\bnext\s+(?:sga\s+)?(?:meeting|event|appointment)\b/i.test(text);
+ if(parsed.error){chatSay(parsed.error);return}
+ let entries=(parsed.date?eventsOn(parsed.date,()=>true):eventsBetween(today(),isWeek?7:60,()=>true)).filter(e=>!isSGA||e.course===sgaSpace()?.id||/\bsga\b|student government/i.test(e.title));
+ if(isNext){const now=new Date(),clock=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;entries=entries.filter(e=>e.date>today()||e.end>clock).slice(0,1)}
+ const label=parsed.date?fullDate(parsed.date):isWeek?'the next 7 days':'upcoming dates',list=entries.slice(0,15).map(e=>`• ${e.title}\n${fullDate(e.date)} · ${niceTime(e.start)}–${niceTime(e.end)}${e.location?' · '+e.location:''}`);
+ if(/calendar/i.test(text)){const tasks=sortedTasks(data.tasks.filter(t=>!t.done&&(parsed.date?t.date===parsed.date:t.date>=today()&&(!isWeek||diffDays(t.date)<=6))));const exams=data.exams.filter(e=>parsed.date?e.date===parsed.date:e.date>=today()&&(!isWeek||diffDays(e.date)<=6));list.push(...exams.slice(0,10).map(e=>`• ${e.title} (exam) — ${fullDate(e.date)}`),...tasks.slice(0,10).map(t=>`• ${t.title} (task) — ${taskExactDue(t)}`))}
+ chatSay(list.length?`Here’s your schedule for ${label}:\n\n${list.join('\n\n')}${entries.length>15?'\n\nSee Meetings or Calendar for the full list.':''}`:`Nothing matching is scheduled for ${label}.`,[{label:'Open calendar',action:'show-calendar'},...entries.slice(0,3).map(e=>({label:'Open '+e.title,action:'open-item',id:e.id}))]);
+}
+
+/* Week view: an all-day strip for exams and due tasks, then an hourly grid for timed events. */
+const HOUR_PX=48;
+/* Overlapping events in one day share the column width side by side ("lanes"). */
+function layoutLanes(events){
+ const out=[];let cluster=[],clusterEnd=-1;
+ const flush=()=>{const lanes=[];for(const ev of cluster){let i=lanes.findIndex(end=>end<=toMin(ev.start));if(i<0){i=lanes.length;lanes.push(0)}lanes[i]=toMin(ev.end);ev.lane=i}for(const ev of cluster)ev.lanes=lanes.length;out.push(...cluster);cluster=[]};
+ for(const ev of events){if(cluster.length&&toMin(ev.start)>=clusterEnd){flush();clusterEnd=-1}cluster.push(ev);clusterEnd=Math.max(clusterEnd,toMin(ev.end))}
+ if(cluster.length)flush();return out;
+}
+function renderWeek(){
+ const start=weekStart(),startKey=dateKey(start),end=offsetDate(6,start),days=Array.from({length:7},(_,i)=>offsetDate(i,start));
+ const perDay=days.map(date=>({date,events:layoutLanes(eventsOn(date)),tasks:sortedTasks(data.tasks.filter(t=>t.date===date&&relevant(t))),exams:data.exams.filter(e=>e.date===date&&relevant(e))}));
+ // Show 7 AM–10 PM by default and widen to fit any earlier or later event.
+ let first=7,last=22;for(const d of perDay)for(const e of d.events){first=Math.min(first,Math.floor(toMin(e.start)/60));last=Math.max(last,Math.ceil(toMin(e.end)/60))}
+ const hours=Array.from({length:last-first},(_,i)=>first+i),now=new Date(),nowMin=now.getHours()*60+now.getMinutes(),hourLabel=h=>`${h%12||12} ${h<12?'AM':'PM'}`;
+ const prev=$('#tg-scroll'),keepScroll=prev&&prev.dataset.week===startKey?prev.scrollTop:null;
+ const eventBlock=(e,date)=>{const top=(toMin(e.start)-first*60)/60*HOUR_PX,height=Math.max((toMin(e.end)-toMin(e.start))/60*HOUR_PX-2,22);return `<button class="tg-event" draggable="true" data-drag="event" data-action="edit-event" data-id="${e.id}" data-occ="${date}" style="--course:${space(e.course).color};top:${top}px;height:${height}px;left:calc(${e.lane/e.lanes*100}% + 2px);width:calc(${100/e.lanes}% - 4px)" title="${esc(e.title)} · ${niceTime(e.start)}–${niceTime(e.end)}${e.location?' · '+esc(e.location):''}"><small>${niceTime(e.start)}${isRecurring(e)?' ↻':''}</small><strong>${esc(e.title)}</strong>${e.location&&height>50?`<small>${esc(e.location)}</small>`:''}</button>`};
+ $('#content').innerHTML=`<div class="view-tools"><div class="week-controls"><button class="btn" data-action="prev-week" aria-label="Previous week">←</button><strong>${shortDate(startKey)} – ${shortDate(end)}, ${parseDate(end).getFullYear()}</strong><button class="btn" data-action="next-week" aria-label="Next week">→</button><button class="btn" data-action="this-week">This week</button></div><select class="space-filter" id="space-filter" aria-label="Filter by space">${spaceOptions(spaceFilter)}</select></div>
+ <div class="tg" style="--hour:${HOUR_PX}px"><div class="tg-inner">
+  <div class="tg-head"><div></div>${perDay.map(d=>{const p=parseDate(d.date);return `<div class="tg-dayhead ${d.date===today()?'current':''}"><div><small>${p.toLocaleDateString(undefined,{weekday:'short'})}</small> <strong>${p.getDate()}</strong></div><button class="icon-btn" data-action="add-event" data-date="${d.date}" aria-label="Add event on ${esc(fullDate(d.date))}">+</button></div>`}).join('')}</div>
+  <div class="tg-allday"><div class="tg-allday-label">Due</div>${perDay.map(d=>`<div class="tg-allday-cell" data-drop-date="${d.date}">${d.exams.map(e=>`<button class="tg-chip exam" style="--course:${space(e.course).color}" draggable="true" data-drag="exam" data-action="edit-exam" data-id="${e.id}" title="Exam: ${esc(e.title)}">◇ ${esc(e.title)}</button>`).join('')}${d.tasks.map(t=>`<button class="tg-chip assignment ${t.done?'finished':''}" style="--course:${space(t.course).color}" draggable="true" data-drag="task" data-action="edit-task" data-id="${t.id}" title="${esc(t.title)} · ${esc(taskExactDue(t))}">${t.dueTime?niceTime(t.dueTime)+' · ':''}${esc(t.title)}</button>`).join('')}</div>`).join('')}</div>
+  <div class="tg-scroll" id="tg-scroll" data-week="${startKey}"><div class="tg-body" style="height:${(last-first)*HOUR_PX}px">
+   <div class="tg-gutter">${hours.map(h=>`<span class="tg-hour" style="top:${(h-first)*HOUR_PX}px">${hourLabel(h)}</span>`).join('')}</div>
+   ${perDay.map(d=>`<div class="tg-col ${d.date===today()?'current':''}" data-drop-date="${d.date}" data-drop-timed="1" data-first="${first}">${d.events.map(e=>eventBlock(e,d.date)).join('')}${d.date===today()&&nowMin>=first*60&&nowMin<=last*60?`<div class="tg-now" style="top:${(nowMin-first*60)/60*HOUR_PX}px" aria-hidden="true"></div>`:''}</div>`).join('')}
+  </div></div>
+ </div></div><p class="week-note">Click an empty time slot to add an event there. Drag events to a new day or time, and drag due items between days. ↻ marks a repeating event; dragging one moves only that date.</p>`;
+ // Keep the scroll position on minute refreshes; otherwise start near now (this week) or 8 AM.
+ const sc=$('#tg-scroll');sc.scrollTop=keepScroll??((weekOffset===0?Math.max(nowMin/60-1.5,first):Math.max(8,first))-first)*HOUR_PX;
+}
+function renderExams(){const exams=[...data.exams].filter(relevant).sort((a,b)=>a.date.localeCompare(b.date));$('#content').innerHTML=`<div class="view-tools"><p class="muted" style="font-size:12px">Exam dates and review checklists.</p><select class="space-filter" id="space-filter" aria-label="Filter by space">${spaceOptions(spaceFilter)}</select></div><div class="cards">${exams.length?exams.map(e=>{const complete=e.topics.filter(t=>t.done).length,pct=e.topics.length?Math.round(complete/e.topics.length*100):0,n=diffDays(e.date);return `<section class="panel exam-card"><div class="card-top"><div>${spaceLabel(e.course)}<h2>${esc(e.title)}</h2></div><button class="icon-btn" data-action="edit-exam" data-id="${e.id}" aria-label="Edit ${esc(e.title)}">✎</button></div><div class="exam-date">${shortDate(e.date)} · ${n<0?'Past exam':n===0?'Today':n===1?'Tomorrow':n+' days to go'}</div><div class="progress"><span style="width:${pct}%"></span></div><div class="progress-text"><span>${complete} of ${e.topics.length} topics reviewed</span><span>${pct}%</span></div>${e.topics.length?e.topics.map(t=>`<div class="topic ${t.done?'done':''}"><button class="check ${t.done?'checked':''}" data-action="toggle-topic" data-id="${e.id}" data-topic="${t.id}" aria-label="${t.done?'Mark unreviewed':'Mark reviewed'}: ${esc(t.title)}" aria-pressed="${t.done}">${t.done?'✓':''}</button><span>${esc(t.title)}</span></div>`).join(''):'<p class="muted" style="font-size:12px">Edit this exam to add study topics.</p>'}${e.notes?`<p class="exam-note">${esc(e.notes)}</p>`:''}</section>`}).join(''):empty('Your next exam starts here.','Add an exam and break your review into manageable topics.','add-exam','Add an exam')}</div>`}
+const counts=id=>({tasks:data.tasks.filter(t=>t.course===id).length,events:data.events.filter(e=>e.course===id).length,exams:data.exams.filter(e=>e.course===id).length});
+function renderSpaces(){$('#content').innerHTML=`<p class="help">Add or rename courses and spaces for each semester. Names and colors update across the planner. When removing a space, move its entries to another space.</p><div class="cards">${data.spaces.map(s=>{const c=counts(s.id);return `<section class="panel space-card"><div class="card-top"><div><div class="space-swatch" style="--course:${s.color}">${esc(s.name.charAt(0).toUpperCase())}</div><h2>${esc(s.name)}</h2></div><button class="icon-btn" data-action="edit-space" data-id="${s.id}" aria-label="Edit ${esc(s.name)}">✎</button></div><div class="space-counts"><span>${c.tasks} tasks</span><span>·</span><span>${c.events} events</span><span>·</span><span>${c.exams} exams</span></div><div class="space-actions"><button class="btn" data-action="edit-space" data-id="${s.id}">Edit space</button><button class="text-button" data-action="show-space" data-id="${s.id}">View tasks →</button></div></section>`}).join('')}</div><p class="help" style="margin-top:22px">Want to keep a previous semester? Export a backup before reorganizing, or keep its courses as separate spaces (for example, “Fall 2026 · C++”). Backups include your spaces, colors, and entries.</p>`}
+function openEditor(type,id=null,date=today(),meeting=false,preset={},occ=null){
+ const collection={task:'tasks',event:'events',exam:'exams',space:'spaces'}[type],item=id?data[collection].find(x=>x.id===id):null;if(id&&!item)return;
+ if(type==='space'&&!id&&data.spaces.length>=100){toast('You can have up to 100 spaces.');return}
+ editing={type,id,collection,occ};$('#delete-button').hidden=!id;$('#delete-button').disabled=type==='space'&&data.spaces.length===1;$('#delete-button').textContent=type==='space'?'Remove space':'Delete';$('#dialog-title').textContent=(id?'Edit ':'Add ')+({task:'task',event:'schedule event',exam:'exam',space:'space'}[type]);
+ if(type==='space'){
+  const s=item||{name:'',color:'#4c8cc9'};$('#form-fields').innerHTML=`<label class="field">Space name<input name="name" required maxlength="60" value="${esc(s.name)}" placeholder="e.g. Spring 2027 · Data Structures"></label><label class="field">Color<input type="color" name="color" value="${s.color}"></label><p class="help" style="margin:0">${id?'Renaming updates this space on every task, event, exam, and filter. Your entries and their progress stay attached.':'Create a space for a course, a project, or anything you want to organize.'}</p>${id&&data.spaces.length===1?'<small>Keep at least one space. Add another before removing this one.</small>':''}<p id="form-error" class="form-error" role="alert"></p>`;
+ }else{
+ const x=item||{title:meeting?'SGA meeting':'',course:meeting?(sgaSpace()?.id||(spaceFilter==='all'?data.spaces[0].id:spaceFilter)):(spaceFilter==='all'?data.spaces[0].id:spaceFilter),date,priority:'normal',start:'09:00',end:'10:00',location:'',notes:'',topics:[],repeatDays:[],repeatUntil:'',...preset};
+ $('#form-fields').innerHTML=`<label class="field">${type==='task'?'Task':type==='exam'?'Exam name':'Event name'}<input name="title" required maxlength="160" value="${esc(x.title)}" placeholder="${type==='task'?'What needs to get done?':type==='exam'?'e.g. Midterm':'e.g. SGA meeting or study block'}"></label><div class="form-row"><label class="field">Space<select name="course">${spaceOptions(x.course,false)}</select></label><label class="field">${type==='task'?'Due date':'Date'}<input type="date" name="date" required value="${esc(x.date)}"></label></div>${type==='task'?`<div class="form-row"><label class="field">Due time <small>Optional</small><input type="time" name="dueTime" value="${esc(x.dueTime||'')}"></label><label class="field">Priority<select name="priority"><option value="high" ${x.priority==='high'?'selected':''}>High</option><option value="normal" ${x.priority==='normal'?'selected':''}>Medium</option><option value="low" ${x.priority==='low'?'selected':''}>Low</option></select></label></div><small>Times use this device’s local time. Leave blank for a date-only deadline.</small>`:''}${type==='event'?`<div class="form-row"><label class="field">Starts<input type="time" name="start" required value="${esc(x.start)}"></label><label class="field">Ends<input type="time" name="end" required value="${esc(x.end)}"></label></div><label class="field">Location <small>Optional</small><input name="location" maxlength="200" value="${esc(x.location)}" placeholder="Library, classroom, or anywhere"></label>${item?.gInstanceOf?'':`<fieldset class="field repeat-field"><legend>Repeats weekly on <small>Optional · leave all off for a one-time event</small></legend><div class="weekday-picks">${WEEKDAYS.map((d,i)=>`<label class="weekday-pick" title="${d}"><input type="checkbox" name="repeatDays" value="${i}" ${(x.repeatDays||[]).includes(i)?'checked':''}><span>${d.slice(0,2)}</span></label>`).join('')}</div></fieldset><label class="field">Repeat until <small>Optional · for example, the last day of classes</small><input type="date" name="repeatUntil" value="${esc(x.repeatUntil||'')}"></label><small>For a repeating event, the date above is the first day it can occur.</small>`}${item&&isRecurring(item)&&occ?`<p class="notice">Edits here change every date in this series. <button type="button" class="text-button" data-action="skip-occurrence" data-id="${item.id}" data-occ="${occ}">Remove only ${esc(fullDate(occ))}</button></p>`:''}`:''}${type==='exam'?`<label class="field">Study topics <small>One topic per line. Existing checked topics stay checked.</small><textarea name="topics" maxlength="15000" placeholder="Topic one&#10;Topic two">${esc(x.topics.map(t=>t.title).join('\n'))}</textarea></label>`:''}${type!=='space'?`<label class="field">Notes <small>Optional</small><textarea name="notes" maxlength="5000" placeholder="Helpful details, links, or a plan of attack…">${esc(x.notes)}</textarea></label>`:''}${item?.gid?`<small class="gcal-note">↔ Synced with Google Calendar${item.gComplex?' · this date belongs to a Google repeating pattern the planner can’t edit, so changes apply to this date only':item.gInstanceOf?' · changes apply to this date only':''}${item.gReadOnly?' · Google won’t accept edits to this event (you may not own it), so changes stay in the planner':''}</small>`:''}<p id="form-error" class="form-error" role="alert"></p>`;
+ }
+ $('#editor').showModal();setTimeout(()=>$('#form-fields input')?.focus(),20);
+}
+/* Removing a space reassigns all related entries; it never silently deletes them. */
+function removeSpaceEditor(id){const s=space(id);if(!s||data.spaces.length===1)return;const c=counts(id),total=c.tasks+c.events+c.exams;editing={type:'remove-space',id,collection:'spaces'};$('#dialog-title').textContent='Remove '+s.name;$('#delete-button').hidden=true;$('#form-fields').innerHTML=`<p class="notice">${total?`This space has <strong>${c.tasks} tasks, ${c.events} events, and ${c.exams} exams</strong>. Choose where to move them before removing the space. Their dates and progress will stay the same.`:'This space is empty. Removing it will leave your other spaces and entries in place.'}</p>${total?`<label class="field">Move all entries to<select name="destination" required>${spaceOptions(data.spaces.find(x=>x.id!==id).id,false,id)}</select></label>`:''}<p id="form-error" class="form-error" role="alert"></p>`;$('#editor-form button[type=submit]').textContent='Remove space'}
+$('#editor').addEventListener('close',()=>{editing=null;$('#editor-form button[type=submit]').textContent='Save changes'});
+$('#editor-form').addEventListener('submit',event=>{
+ event.preventDefault();if(!editing)return;const f=new FormData(event.currentTarget),value=name=>String(f.get(name)||'').trim(),error=message=>$('#form-error').textContent=message,{type,id,collection}=editing;
+ if(type==='remove-space'){
+  const c=counts(id),hasEntries=c.tasks+c.events+c.exams>0,destination=value('destination');if(data.spaces.length<2)return error('Keep at least one space.');if(hasEntries&&(!space(destination)||destination===id))return error('Choose another space.');
+  remember();for(const key of ['tasks','events','exams'])data[key].forEach(x=>{if(x.course===id)x.course=destination});data.spaces=data.spaces.filter(s=>s.id!==id);if(spaceFilter===id)spaceFilter=hasEntries?destination:'all';save();$('#editor').close();render();toast(hasEntries?'Space removed. All entries moved safely.':'Space removed.',true);return;
+ }
+ if(type==='space'){
+  const name=value('name'),color=value('color');if(!name||name.length>60)return error('Use a name between 1 and 60 characters.');if(data.spaces.some(s=>s.id!==id&&s.name.toLowerCase()===name.toLowerCase()))return error('Another space already uses this name.');if(!validColor(color))return error('Choose a valid color.');
+  remember();const item={id:id||uid(),name,color};if(id)data.spaces=data.spaces.map(s=>s.id===id?item:s);else data.spaces.push(item);save();$('#editor').close();render();toast(id?'Space updated everywhere.':'New space added.',true);return;
+ }
+ if(!value('title'))return error('Give this entry a name.');if(!validDate(value('date')))return error('Choose a valid date.');if(!space(value('course')))return error('Choose a valid space.');
+ const old=data[collection].find(x=>x.id===id),item={id:id||uid(),title:value('title'),course:value('course'),date:value('date'),notes:value('notes')};
+ if(type==='task'){if(value('dueTime')&&!validTime(value('dueTime')))return error('Choose a valid due time, or leave it blank.');Object.assign(item,{dueTime:value('dueTime'),priority:value('priority'),done:old?.done||false})}
+ if(type==='event'){if(!validTime(value('start'))||!validTime(value('end'))||value('end')<=value('start'))return error('The end time needs to be after the start time.');const days=[...new Set(f.getAll('repeatDays').map(Number).filter(n=>Number.isInteger(n)&&n>=0&&n<=6))].sort(),until=value('repeatUntil');if(days.length&&until&&(!validDate(until)||until<value('date')))return error('“Repeat until” must be on or after the first date.');Object.assign(item,{start:value('start'),end:value('end'),location:value('location'),repeatDays:days,repeatUntil:days.length?until:'',skipDates:days.length?(old?.skipDates||[]):[]})}
+ if(type==='exam'){const titles=value('topics').split('\n').map(t=>t.trim()).filter(Boolean);if(titles.length>100||titles.some(t=>t.length>200))return error('Use up to 100 topics, with no more than 200 characters each.');const prior=[...(old?.topics||[])];item.topics=titles.map(title=>{const index=prior.findIndex(t=>t.title===title);return index>=0?prior.splice(index,1)[0]:{id:uid(),title,done:false}})}
+ remember();if(id)data[collection]=data[collection].map(x=>x.id===id?item:x);else data[collection].push(item);save();$('#editor').close();render();toast(id?'Changes saved.':'Added to your plan.',true);
+});
+$('#delete-button').addEventListener('click',()=>{if(!editing)return;if(editing.type==='space'){removeSpaceEditor(editing.id);return}const target=data[editing.collection].find(x=>x.id===editing.id);if(target&&isRecurring(target)&&!confirm('Delete every date of this repeating event? To remove just one date, use “Remove only …” instead.'))return;remember();data[editing.collection]=data[editing.collection].filter(x=>x.id!==editing.id);save();$('#editor').close();render();toast('Entry deleted.',true)});
+document.addEventListener('click',event=>{
+ const el=event.target.closest('button');if(!el)return;if(el.dataset.view){view=el.dataset.view;query='';spaceFilter='all';statusFilter='open';render();return}const a=el.dataset.action,id=el.dataset.id;
+ if(a==='add-meeting'){ensureSGASpace();openEditor('event',null,el.dataset.date||today(),true)}
+ if(a?.startsWith('add-')&&['task','event','exam','space'].includes(a.slice(4)))openEditor(a.slice(4),null,el.dataset.date||today());
+ if(a?.startsWith('edit-')&&['task','event','exam','space'].includes(a.slice(5)))openEditor(a.slice(5),id,undefined,false,{},el.dataset.occ||null);
+ if(a==='skip-occurrence'){const e=data.events.find(x=>x.id===id);if(e){remember();e.skipDates=[...new Set([...(e.skipDates||[]),el.dataset.occ])];save();$('#editor').close();render();toast('Removed '+shortDate(el.dataset.occ)+' only.',true)}}
+ if(a==='undo-last')undoLast();
+ if(a==='gcal-open'){renderGcal();$('#gcal-dialog').showModal();if(gs().connected&&gTokenValid()&&!gCalendars.length)gLoadCalendars().then(renderGcal).catch(()=>{})}
+ if(a==='gcal-close')$('#gcal-dialog').close();
+ if(a==='gcal-connect')gConnect();
+ if(a==='gcal-sync')gSync(true).then(()=>{if($('#gcal-dialog').open)renderGcal()});
+ if(a==='gcal-disconnect')gDisconnect();
+ if(a==='theme'){theme={system:'light',light:'dark',dark:'system'}[theme];try{localStorage.setItem(THEME_KEY,theme)}catch(e){}applyTheme()}
+ if(a==='shortcuts')$('#shortcuts-dialog').showModal();
+ if(a==='close-shortcuts')$('#shortcuts-dialog').close();
+ if(a==='close')$('#editor').close();
+ if(a==='show-space'){spaceFilter=id;view='tasks';query='';statusFilter='all';render()}
+ if(a==='toggle-task'){const t=data.tasks.find(x=>x.id===id);if(t){remember();t.done=!t.done;save();render();toast(t.done?'Task completed.':'Task reopened.',true)}}
+ if(a==='toggle-topic'){const t=data.exams.find(e=>e.id===id)?.topics.find(t=>t.id===el.dataset.topic);if(t){t.done=!t.done;save();render()}}
+ if(a==='calendar-day'){selectedDate=el.dataset.date;calendarMonth=selectedDate.slice(0,7)+'-01';renderCalendar()}
+ if(a==='prev-month')moveCalendar(-1);if(a==='next-month')moveCalendar(1);if(a==='current-month'){calendarMonth=today().slice(0,7)+'-01';selectedDate=today();renderCalendar()}
+ if(a==='prev-week'){weekOffset--;renderWeek()}if(a==='next-week'){weekOffset++;renderWeek()}if(a==='this-week'){weekOffset=0;renderWeek()}
+ if(a==='clear-samples'){if(!confirm((data.sync?.connected?'Google sync is on, so synced copies in Google Calendar will be deleted too. ':'')+'Clear all current tasks, events, exams, and notes, including examples you edited? Your spaces and colors will be kept. Export a backup first to keep your entries.'))return;remember();data={...data,sample:false,notes:'',tasks:[],events:[],exams:[]};resetChatState();save();render();toast('Entries cleared. Your spaces were kept.',true)}
+ if(a==='export'){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='Gilbert-Planner-backup-'+today()+'.json';document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);toast('Backup download requested.')}
+ if(a==='import')$('#import-file').click();
+});
+document.addEventListener('input',event=>{if(event.target.id==='task-search'){query=event.target.value;renderTaskList()}if(event.target.id==='quick-notes'){data.notes=event.target.value;save()}});
+document.addEventListener('change',event=>{if(event.target.id==='space-filter'){spaceFilter=event.target.value;if(view==='week')renderWeek();else if(view==='exams')renderExams();else if(view==='meetings')renderMeetings();else if(view==='calendar')renderCalendar();else renderTaskList()}if(event.target.id==='status-filter'){statusFilter=event.target.value;renderTaskList()}});
+$('#import-file').addEventListener('change',async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>5*1024*1024)throw Error('Choose a backup smaller than 5 MB.');const imported=validate(JSON.parse(await file.text()));if(!confirm('Replace your current planner with this backup? Export your current plan first to keep a copy.'))return;remember();data=imported;blockedWrite=false;loadIssue='';spaceFilter='all';query='';statusFilter='open';resetChatState();$('#editor').close();save();render();toast('Backup restored, including spaces.',true)}catch(error){toast(error instanceof SyntaxError?'This file is not valid JSON.':error.message)}finally{event.target.value=''}});
+const navLabels={today:['','Agenda'],tasks:['☑','Tasks'],calendar:['▦','Calendar'],week:['▤','Week'],meetings:['◷','Meetings'],exams:['◇','Exam prep'],spaces:['◈','Spaces']};document.querySelectorAll('.nav button').forEach(b=>{const [symbol,label]=navLabels[b.dataset.view];b.textContent=label});
+/* Drag to reschedule (mouse/trackpad). Tasks and exams change day only; events can also change time
+   in the week grid. Dragging one date of a repeating event splits that date off as a one-time copy. */
+let dragInfo=null;
+function moveEntry(info,date,startMin){
+ const item=data[entryCollection(info.type)]?.find(x=>x.id===info.id);if(!item||!validDate(date))return;
+ let start=item.start,end=item.end;
+ if(info.type==='event'&&startMin!=null){const dur=toMin(item.end)-toMin(item.start);const s=Math.min(Math.max(0,Math.round(startMin/15)*15),1439-dur);start=toKey(s);end=toKey(s+dur)}
+ const fromDate=info.occ||item.date;if(date===fromDate&&start===item.start)return;
+ remember();
+ if(info.type==='event'&&isRecurring(item)){item.skipDates=[...new Set([...(item.skipDates||[]),fromDate])];data.events.push({...item,id:uid(),date,start,end,repeatDays:[],repeatUntil:'',skipDates:[]});toast(`Moved “${item.title}” on ${shortDate(fromDate)} only.`,true)}
+ else{item.date=date;if(info.type==='event'){item.start=start;item.end=end}toast(`Moved “${item.title}” to ${shortDate(date)}${info.type==='event'?' at '+niceTime(start):''}.`,true)}
+ save();render();
+}
+document.addEventListener('dragstart',event=>{const el=event.target.closest?.('[data-drag]');if(!el)return;dragInfo={type:el.dataset.drag,id:el.dataset.id,occ:el.dataset.occ||null,grabY:event.clientY-el.getBoundingClientRect().top};event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',el.dataset.id);requestAnimationFrame(()=>el.classList.add('dragging'))});
+document.addEventListener('dragend',()=>{dragInfo=null;document.querySelectorAll('.dragging,.drop-target').forEach(n=>n.classList.remove('dragging','drop-target'))});
+document.addEventListener('dragover',event=>{const zone=event.target.closest?.('[data-drop-date]');if(!zone||!dragInfo)return;event.preventDefault();event.dataTransfer.dropEffect='move';document.querySelectorAll('.drop-target').forEach(n=>n!==zone&&n.classList.remove('drop-target'));zone.classList.add('drop-target')});
+document.addEventListener('drop',event=>{const zone=event.target.closest?.('[data-drop-date]');if(!zone||!dragInfo)return;event.preventDefault();const info=dragInfo;dragInfo=null;let startMin=null;
+ if(zone.dataset.dropTimed&&info.type==='event'){const y=event.clientY-zone.getBoundingClientRect().top-info.grabY;startMin=+zone.dataset.first*60+y/HOUR_PX*60}
+ moveEntry(info,zone.dataset.dropDate,startMin)});
+/* Clicking empty space in the week grid adds an event at that half hour. */
+document.addEventListener('click',event=>{const col=event.target.closest('.tg-col');if(!col||event.target.closest('button'))return;const m=Math.floor((+col.dataset.first*60+(event.clientY-col.getBoundingClientRect().top)/HOUR_PX*60)/30)*30,s=Math.min(Math.max(m,0),1410);openEditor('event',null,col.dataset.dropDate,false,{start:toKey(s),end:toKey(Math.min(s+60,1439))})});
+/* ===================== Google Calendar two-way sync =====================
+   • Each linked planner item stores gid (Google event id), gUpdated (Google's "updated" stamp at the
+     last sync) and gFp (a fingerprint of the planner fields at the last sync).
+       fp(item) !== gFp           → changed in the planner since the last sync
+       google.updated !== gUpdated → changed in Google since the last sync
+     If both changed, the newer edit wins (planner edit time = item.mod, stamped in save()).
+   • data.sync.links lists every gid linked after the last sync, so a gid that vanished from the
+     planner was deleted here and gets deleted in Google too.
+   • Weekly Google repeats map to planner repeating events. Other patterns (monthly, every 2 weeks…)
+     arrive as single dates linked to that Google series (gComplex) so edits touch just that date.
+   • Edited/cancelled single dates of a weekly series become a skip date on the planner series plus
+     (for edits) a one-time copy linked to that Google instance (gInstanceOf + gOrig).
+   No server: the browser talks to Google directly with a short-lived token (about 1 hour). */
+const G_SCOPES='https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.calendarlist.readonly';
+const TZ=Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC',BYDAY=['SU','MO','TU','WE','TH','FR','SA'],TOKEN_KEY='gilbert-gcal-token';
+let gToken=null,gSyncing=false,gTimer=null,gStatus='',gApplying=false,gCalendars=[];
+try{const t=JSON.parse(sessionStorage.getItem(TOKEN_KEY)||'null');if(t&&t.exp>Date.now())gToken=t}catch(e){}
+function gs(){return data.sync||(data.sync=sanitizeSync({}))}
+const gTokenValid=()=>!!gToken&&gToken.exp>Date.now()+60000;
+const isHosted=()=>location.protocol==='https:'||/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+function fp(type,x){return JSON.stringify(type==='task'?[x.title,x.date,x.dueTime||'',!!x.done,x.notes||'',x.course]:[x.title,x.date,x.start,x.end,x.location||'',x.notes||'',x.course,x.repeatDays||[],x.repeatUntil||'',[...(x.skipDates||[])].sort()])}
+/* Remember when each item last changed in the planner (used only to settle conflicts). */
+const lastFp=new Map();
+function stampChanges(){const now=Date.now();for(const [type,list] of [['event',data.events],['task',data.tasks]])for(const x of list){const f=fp(type,x);if(!gApplying&&lastFp.has(x.id)&&lastFp.get(x.id)!==f||!x.mod)x.mod=now;lastFp.set(x.id,f)}}
+function gQueue(){if(gApplying||!data.sync?.connected||!gTokenValid())return;clearTimeout(gTimer);gTimer=setTimeout(()=>{if(!$('#editor').open)gSync(false)},4000)}
+function gStatusText(){const S=gs();if(gSyncing)return 'Syncing…';if(gStatus)return gStatus;if(!S.connected)return 'Not connected';return S.lastSync?'Synced '+new Date(S.lastSync).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+(gTokenValid()?'':' · Sync now to reconnect'):'Connected · not synced yet'}
+function gSetStatus(m){if(m!==undefined)gStatus=m;$('#gcal-status').textContent=gStatusText();$('#gcal-side-sync').hidden=!gs().connected;const st=document.querySelector('.gcal-state');if(st)st.textContent=gStatusText()}
+function loadGis(){return window.google?.accounts?.oauth2?Promise.resolve():new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='https://accounts.google.com/gsi/client';sc.async=true;sc.onload=res;sc.onerror=()=>rej(new Error('Could not load Google sign-in. Check your internet connection.'));document.head.appendChild(sc)})}
+/* Get an access token. Non-interactive calls only reuse a valid token (popups need a click). */
+async function gAuthorize(interactive){
+ if(gTokenValid())return true;if(!interactive)return false;
+ if(!isHosted())throw new Error('Google sign-in needs the planner hosted on https (for example GitHub Pages). It can’t run from a file on your computer.');
+ if(!gs().clientId)throw new Error('Paste your Google OAuth Client ID first.');
+ await loadGis();
+ return new Promise((res,rej)=>{
+  const client=google.accounts.oauth2.initTokenClient({client_id:gs().clientId,scope:G_SCOPES,
+   callback:r=>{if(r.error)return rej(new Error('Google sign-in failed ('+r.error+').'));gToken={value:r.access_token,exp:Date.now()+(+r.expires_in||3600)*1000};try{sessionStorage.setItem(TOKEN_KEY,JSON.stringify(gToken))}catch(e){}res(true)},
+   error_callback:e=>rej(new Error(e?.type==='popup_closed'?'The Google sign-in window was closed.':e?.type==='popup_failed_to_open'?'Your browser blocked the Google sign-in popup. Allow popups for this site.':'Google sign-in failed.'))});
+  client.requestAccessToken({prompt:gs().connected?'':'consent'});
+ });
+}
+/* Small fetch wrapper for the Calendar REST API. */
+async function gFetch(path,{method='GET',body,query}={}){
+ const url=new URL('https://www.googleapis.com/calendar/v3/'+path);for(const [k,v] of Object.entries(query||{}))if(v!=null)url.searchParams.set(k,v);
+ const r=await fetch(url,{method,headers:{Authorization:'Bearer '+gToken.value,...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});
+ if(r.status===401){gToken=null;try{sessionStorage.removeItem(TOKEN_KEY)}catch(e){}throw Object.assign(new Error('Google sign-in expired. Click Sync now to reconnect.'),{auth:true})}
+ if(method==='DELETE'&&[204,404,410].includes(r.status))return null;
+ if(!r.ok){let msg='';try{msg=(await r.json()).error?.message||''}catch(e){}throw Object.assign(new Error(msg||'Google returned error '+r.status),{status:r.status})}
+ return r.status===204?null:r.json();
+}
+async function gListAll(path,query){const out=[];let pageToken;do{const r=await gFetch(path,{query:{...query,pageToken}});out.push(...(r.items||[]));pageToken=r.nextPageToken}while(pageToken);return out}
+async function gLoadCalendars(){gCalendars=await gListAll('users/me/calendarList',{minAccessRole:'writer'})}
+/* Google ⇄ planner field conversion. Times are shown in this device's time zone. */
+const gLocal=dt=>{const d=new Date(dt);return{date:dateKey(d),time:toKey(d.getHours()*60+d.getMinutes())}};
+const gStamp=v=>v.endsWith('Z')?new Date(`${v.slice(0,4)}-${v.slice(4,6)}-${v.slice(6,8)}T${v.slice(9,11)}:${v.slice(11,13)}:${v.slice(13,15)}Z`):null;
+function parseWeekly(recurrence){
+ let rule=null;const ex=[];
+ for(const line of recurrence||[]){if(line.startsWith('RRULE:'))rule=Object.fromEntries(line.slice(6).split(';').map(p=>p.split('=')));else if(line.startsWith('EXDATE'))ex.push(...line.slice(line.indexOf(':')+1).split(','))}
+ if(!rule||rule.FREQ!=='WEEKLY'||rule.COUNT||rule.INTERVAL&&rule.INTERVAL!=='1'||Object.keys(rule).some(k=>!['FREQ','BYDAY','UNTIL','INTERVAL','WKST'].includes(k)))return null;
+ const days=(rule.BYDAY||'').split(',').filter(Boolean).map(d=>BYDAY.indexOf(d));if(days.some(d=>d<0))return null;
+ const u=rule.UNTIL||'',until=!u?'':u.length===8?`${u.slice(0,4)}-${u.slice(4,6)}-${u.slice(6,8)}`:gStamp(u)?dateKey(gStamp(u)):`${u.slice(0,4)}-${u.slice(4,6)}-${u.slice(6,8)}`;
+ const exdates=ex.map(v=>gStamp(v)?dateKey(gStamp(v)):`${v.slice(0,4)}-${v.slice(4,6)}-${v.slice(6,8)}`).filter(validDate);
+ return{days:days.length?days:null,until:validDate(until)?until:'',exdates};
+}
+function eventFields(g){
+ if(!g.start?.dateTime||!g.end?.dateTime)return null; // all-day events are skipped
+ const s=gLocal(g.start.dateTime),e=gLocal(g.end.dateTime);let end=e.date===s.date?e.time:'23:59';
+ if(end<=s.time)end=toKey(Math.min(toMin(s.time)+15,1439));if(end<=s.time)return null;
+ return{title:(g.summary||'(No title)').slice(0,160),date:s.date,start:s.time,end,location:(g.location||'').slice(0,200),notes:(g.description||'').slice(0,5000)};
+}
+function gSpace(g){const sp=g.extendedProperties?.private?.plannerSpace;if(sp&&space(sp))return sp;let s=data.spaces.find(x=>x.name==='Google Calendar');if(!s){s={id:uid(),name:'Google Calendar',color:'#3b82c4'};data.spaces.push(s)}return s.id}
+const untilStamp=d=>new Date(d+'T23:59:59').toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+function toGoogle(type,x){
+ const priv={plannerId:x.id,plannerType:type,plannerSpace:x.course};
+ if(type==='task'){const end=toMin(x.dueTime),start=Math.max(0,end-15);return{summary:(x.done?'✓ ':'')+'Due: '+x.title,description:x.notes||'',transparency:'transparent',start:{dateTime:`${x.date}T${toKey(start)}:00`,timeZone:TZ},end:{dateTime:`${x.date}T${toKey(end>start?end:start+1)}:00`,timeZone:TZ},extendedProperties:{private:priv}}}
+ const body={summary:x.title,location:x.location||'',description:x.notes||'',extendedProperties:{private:priv}};let first=x.date;
+ if(isRecurring(x)&&!x.gInstanceOf){
+  // Google treats the start as the first occurrence, so move it to the first matching weekday.
+  for(let i=0;i<7&&!x.repeatDays.includes(parseDate(first).getDay());i++)first=offsetDate(1,parseDate(first));
+  const linked=new Set(data.events.filter(e=>e.gInstanceOf&&e.gInstanceOf===x.gid).map(e=>e.gOrig)),ex=(x.skipDates||[]).filter(d=>!linked.has(d)&&d>=first).sort();
+  body.recurrence=['RRULE:FREQ=WEEKLY;BYDAY='+x.repeatDays.map(d=>BYDAY[d]).join(',')+(x.repeatUntil?';UNTIL='+untilStamp(x.repeatUntil):''),...(ex.length?['EXDATE;TZID='+TZ+':'+ex.map(d=>d.replace(/-/g,'')+'T'+x.start.replace(':','')+'00').join(',')]:[])];
+ }else if(!x.gInstanceOf&&x.gRec)body.recurrence=[]; // it used to repeat; clear the rule in Google
+ body.start={dateTime:`${first}T${x.start}:00`,timeZone:TZ};body.end={dateTime:`${first}T${x.end}:00`,timeZone:TZ};
+ return body;
+}
+function gLink(type,x,g){x.gid=g.id;x.gUpdated=g.updated||'';x.gFp=fp(type,x)}
+/* Apply a change without marking the item as edited in the planner (unless it already was). */
+function quietly(type,x,fn){const clean=fp(type,x)===x.gFp;fn();if(clean)x.gFp=fp(type,x)}
+
+async function gSync(interactive=false){
+ if(gSyncing)return;const S=gs();
+ if(!S.connected){if(interactive){renderGcal();$('#gcal-dialog').showModal()}return}
+ try{if(!await gAuthorize(interactive)){gSetStatus('');return}}catch(e){gSetStatus(e.message);if(interactive)toast(e.message);return}
+ gSyncing=true;gSetStatus('');const report={in:0,out:0,del:0,conflicts:0,failed:0},lastSync=S.lastSync||0;
+ try{
+  const base=`calendars/${encodeURIComponent(S.calendarId||'primary')}/events`,winStart=new Date(Date.now()-30*864e5).toISOString();
+  const items=await gListAll(base,{singleEvents:'false',showDeleted:'true',maxResults:'2500',timeMin:winStart,timeMax:new Date(Date.now()+365*864e5).toISOString()});
+  const byGid=new Map(),byPid=new Map();
+  for(const [type,list] of [['event',data.events],['task',data.tasks]])for(const x of list){byPid.set(x.id,{type,x});if(x.gid)byGid.set(x.gid,{type,x})}
+  const changedHere=(type,x)=>fp(type,x)!==x.gFp;
+  // Match by Google id, or by the planner id we stamped on events we created (recovers lost links).
+  const find=g=>{const m=byGid.get(g.id);if(m)return m;const pid=g.extendedProperties?.private?.plannerId,p=pid&&byPid.get(pid);if(p&&!p.x.gid){p.x.gid=g.id;p.x.gUpdated='';byGid.set(g.id,p);return p}return null};
+  // Was linked last time but is gone from the planner now → deleted here (unless Google changed it since).
+  const deletedHere=g=>S.links[g.id]&&!(Date.parse(g.updated)>lastSync);
+  const googleWins=(type,x,g)=>{if(x.gUpdated===g.updated)return false;if(!x.gUpdated)return Date.parse(g.updated)>=(x.mod||0);if(!changedHere(type,x))return true;report.conflicts++;return Date.parse(g.updated)>=(x.mod||0)};
+  const addLocal=(type,x,g)=>{gLink(type,x,g);data[type==='task'?'tasks':'events'].push(x);byGid.set(g.id,{type,x});report.in++};
+  // Google deleted something: drop it here, unless the planner copy was edited more recently.
+  const removeLocal=(m,g)=>{
+   if(changedHere(m.type,m.x)&&(m.x.mod||0)>Date.parse(g.updated)&&!m.x.gInstanceOf){delete m.x.gid;delete m.x.gUpdated;report.conflicts++;return}
+   if(m.type==='task'){m.x.gOff=true;delete m.x.gid;delete m.x.gUpdated;return} // never delete a task because its calendar block went away
+   data.events=data.events.filter(e=>e!==m.x&&e.gInstanceOf!==g.id);byGid.delete(g.id);report.del++;
+  };
+  const masters=items.filter(g=>g.recurrence),exceptions=items.filter(g=>g.recurringEventId),singles=items.filter(g=>!g.recurrence&&!g.recurringEventId),complex=[];
+  // 1) Repeating series
+  for(const g of masters){const m=find(g);
+   if(g.status==='cancelled'){if(m)removeLocal(m,g);continue}
+   const rule=parseWeekly(g.recurrence),f=eventFields(g);if(!f)continue;
+   if(!rule){complex.push(g);continue}
+   const fields={...f,repeatDays:[...(rule.days||[parseDate(f.date).getDay()])].sort(),repeatUntil:rule.until,skipDates:rule.exdates};
+   if(!m){if(!deletedHere(g))addLocal('event',{id:uid(),course:gSpace(g),...fields,gRec:true},g)}
+   else if(googleWins(m.type,m.x,g)){const keep=(m.x.skipDates||[]).filter(d=>data.events.some(e=>e.gInstanceOf===g.id&&e.gOrig===d));Object.assign(m.x,fields,{skipDates:[...new Set([...fields.skipDates,...keep])].sort(),gRec:true});gLink('event',m.x,g);report.in++}
+  }
+  // 2) Single dates of weekly series that were edited or cancelled in Google
+  for(const g of exceptions){const parent=byGid.get(g.recurringEventId);if(!parent||parent.type!=='event'||!isRecurring(parent.x))continue;
+   const series=parent.x,origRaw=g.originalStartTime?.dateTime;if(!origRaw)continue;const orig=gLocal(origRaw).date,m=byGid.get(g.id);
+   quietly('event',series,()=>{if(!(series.skipDates||[]).includes(orig))series.skipDates=[...(series.skipDates||[]),orig].sort()});
+   if(g.status==='cancelled'){if(m){data.events=data.events.filter(e=>e!==m.x);report.del++}continue}
+   const f=eventFields(g);if(!f)continue;
+   if(!m){if(!deletedHere(g))addLocal('event',{id:uid(),course:series.course,...f,repeatDays:[],repeatUntil:'',skipDates:[],gInstanceOf:series.gid,gOrig:orig},g)}
+   else if(googleWins('event',m.x,g)){Object.assign(m.x,f);gLink('event',m.x,g);report.in++}
+  }
+  // 3) Patterns the planner can't express: bring in each date (next ~6 months) on its own
+  for(const g of complex){
+   const inst=await gListAll(`${base}/${encodeURIComponent(g.id)}/instances`,{showDeleted:'true',maxResults:'2500',timeMin:winStart,timeMax:new Date(Date.now()+180*864e5).toISOString()});
+   for(const i of inst){const m=byGid.get(i.id);
+    if(i.status==='cancelled'){if(m){data.events=data.events.filter(e=>e!==m.x);report.del++}continue}
+    const f=eventFields(i);if(!f)continue;
+    if(!m){if(!deletedHere(i))addLocal('event',{id:uid(),course:gSpace(g),...f,repeatDays:[],repeatUntil:'',skipDates:[],gInstanceOf:g.id,gComplex:true,gOrig:gLocal(i.originalStartTime?.dateTime||i.start.dateTime).date},i)}
+    else if(googleWins('event',m.x,i)){Object.assign(m.x,f);gLink('event',m.x,i);report.in++}
+   }
+  }
+  // 4) One-time events (and the "Due:" blocks made from tasks)
+  for(const g of singles){const m=find(g),priv=g.extendedProperties?.private||{};
+   if(g.status==='cancelled'){if(m)removeLocal(m,g);continue}
+   if(priv.plannerType==='task'){
+    if(m?.type==='task'&&g.end?.dateTime&&googleWins('task',m.x,g)){const due=gLocal(g.end.dateTime),title=(g.summary||'').replace(/^\s*(✓\s*)?Due:\s*/,'').trim();Object.assign(m.x,{title:(title||m.x.title).slice(0,160),date:due.date,dueTime:due.time,done:/^\s*✓/.test(g.summary||''),notes:(g.description||'').slice(0,5000)});gLink('task',m.x,g);report.in++}
+    continue;
+   }
+   const f=eventFields(g);if(!f)continue;
+   if(!m){if(!deletedHere(g))addLocal('event',{id:uid(),course:gSpace(g),...f,repeatDays:[],repeatUntil:'',skipDates:[]},g)}
+   else if(m.type==='event'&&googleWins('event',m.x,g)){Object.assign(m.x,f,{repeatDays:[],repeatUntil:'',skipDates:[]});gLink('event',m.x,g);report.in++}
+  }
+  // 5) Deleted in the planner → delete in Google
+  const present=new Set([...data.events,...data.tasks].map(x=>x.gid).filter(Boolean)),gById=new Map(items.map(g=>[g.id,g]));
+  for(const gid of Object.keys(S.links)){if(present.has(gid))continue;const g=gById.get(gid);
+   if(g&&g.status!=='cancelled'&&lastSync&&Date.parse(g.updated)>lastSync)continue; // changed in Google afterwards: it was re-imported above
+   try{await gFetch(`${base}/${encodeURIComponent(gid)}`,{method:'DELETE'});data.events=data.events.filter(e=>e.gInstanceOf!==gid||e.gComplex);report.del++}catch(e){if(e.auth)throw e;report.failed++}
+  }
+  // 6) New or edited in the planner → send to Google
+  const push=async(type,x)=>{
+   try{
+    if(!x.gid){const r=await gFetch(base,{method:'POST',body:toGoogle(type,x)});gLink(type,x,r);if(type==='event')x.gRec=isRecurring(x)||undefined;report.out++}
+    else if(changedHere(type,x)){const r=await gFetch(`${base}/${encodeURIComponent(x.gid)}`,{method:'PATCH',body:toGoogle(type,x)});gLink(type,x,r);if(type==='event'&&!x.gInstanceOf)x.gRec=isRecurring(x)||undefined;report.out++}
+   }catch(e){if(e.auth)throw e;if(e.status===403)x.gReadOnly=true;report.failed++}
+  };
+  for(const x of data.events){if(x.gReadOnly||!x.gid&&x.gInstanceOf)continue;await push('event',x)}
+  for(const x of data.tasks){
+   const want=S.sendTasks&&validTime(x.dueTime)&&!x.gOff;
+   if(!want){if(x.gid){try{await gFetch(`${base}/${encodeURIComponent(x.gid)}`,{method:'DELETE'});report.del++}catch(e){if(e.auth)throw e}delete x.gid;delete x.gUpdated;delete x.gFp}continue}
+   if(x.gReadOnly||!x.gid&&x.date<offsetDate(-30))continue;await push('task',x);
+  }
+  S.links=Object.fromEntries([...data.events,...data.tasks].filter(x=>x.gid).map(x=>[x.gid,1]));S.lastSync=Date.now();
+  if(report.in||report.del)undoSnapshot=null; // an older snapshot would fight with what just synced
+  gApplying=true;save();gApplying=false;render();gSyncing=false;gSetStatus('');
+  const msg=`Google sync: ${report.in} in · ${report.out} out · ${report.del} removed${report.conflicts?` · ${report.conflicts} edited in both places (newer kept)`:''}${report.failed?` · ${report.failed} failed`:''}`;
+  if(interactive||report.in||report.del||report.failed)toast(msg);
+ }catch(e){gSyncing=false;gApplying=false;gSetStatus(e.auth?'':'Sync failed: '+e.message);if(interactive||e.auth)toast(e.message)}
+ finally{gSyncing=false}
+}
+async function gConnect(){
+ const S=gs();if(!S.clientId){toast('Paste your Client ID first.');return}
+ if(data.sample&&confirm('Your planner still has the example entries. Clear them before connecting so they aren’t copied into Google Calendar?')){data.sample=false;data.tasks=[];data.events=[];data.exams=[];data.notes=''}
+ try{await gAuthorize(true)}catch(e){gSetStatus(e.message);toast(e.message);renderGcal();return}
+ S.connected=true;save();try{await gLoadCalendars()}catch(e){}renderGcal();await gSync(true);renderGcal();
+}
+function gDisconnect(){const S=gs();if(gToken&&window.google?.accounts?.oauth2)google.accounts.oauth2.revoke(gToken.value,()=>{});gToken=null;try{sessionStorage.removeItem(TOKEN_KEY)}catch(e){}S.connected=false;save();gSetStatus('');renderGcal();toast('Google Calendar disconnected. Your planner entries stay as they are.')}
+function renderGcal(){
+ const S=gs(),hosted=isHosted(),ok=gTokenValid(),cals=gCalendars.length?gCalendars:[{id:S.calendarId,summary:S.calendarName||(S.calendarId==='primary'?'Main calendar':S.calendarId),primary:S.calendarId==='primary'}];
+ $('#gcal-body').innerHTML=`${hosted?'':`<p class="notice danger-notice"><strong>Host the planner first.</strong> Google sign-in can’t run from a file opened on your computer. Put this file on GitHub Pages (or any https site), open it there, then come back here. Export a backup from this copy and import it there to bring your entries along.</p>`}
+ <details ${S.clientId?'':'open'}><summary class="text-button">One-time Google setup (about 10 minutes)</summary><ol class="gcal-steps">
+ <li>Open <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">console.cloud.google.com</a> and create a project (any name).</li>
+ <li>In <strong>APIs &amp; Services → Library</strong>, enable <strong>Google Calendar API</strong>.</li>
+ <li>Set up the <strong>OAuth consent screen</strong> (also labeled Google Auth Platform): choose <strong>External</strong>, enter an app name and your email, then add your Gmail address under <strong>Test users</strong>.</li>
+ <li>In <strong>Credentials → Create credentials → OAuth client ID</strong>, choose <strong>Web application</strong> and add this under <strong>Authorized JavaScript origins</strong>: <code>${esc(hosted?location.origin:'https://YOUR-USERNAME.github.io')}</code></li>
+ <li>Copy the <strong>Client ID</strong> (it ends in <code>.apps.googleusercontent.com</code>) and paste it below.</li></ol></details>
+ <label class="field">OAuth Client ID<input id="gcal-client" value="${esc(S.clientId)}" placeholder="123456-abc.apps.googleusercontent.com" autocomplete="off" spellcheck="false"></label>
+ ${S.connected?`<label class="field">Calendar to sync with<select id="gcal-calendar">${cals.map(c=>`<option value="${esc(c.id)}" ${c.id===S.calendarId||c.primary&&S.calendarId==='primary'?'selected':''}>${esc(c.summaryOverride||c.summary||c.id)}${c.primary?' (main)':''}</option>`).join('')}</select></label>
+ <label class="check-row"><input type="checkbox" id="gcal-tasks" ${S.sendTasks?'checked':''}><span>Send tasks that have a due time, as 15-minute “Due:” blocks ending at the due time</span></label>`:''}
+ <p class="gcal-state" role="status">${esc(gStatusText())}</p>
+ <div class="gcal-actions">${S.connected?`<button type="button" class="btn primary" data-action="gcal-sync">${ok?'Sync now':'Reconnect &amp; sync'}</button><button type="button" class="btn" data-action="gcal-disconnect">Disconnect</button>`:`<button type="button" class="btn primary" data-action="gcal-connect" ${hosted?'':'disabled'}>Connect Google Calendar</button>`}</div>
+ <p class="help" style="margin:0">Sync covers the past 30 days through the next 12 months and runs every few minutes while the planner is open. Edit events in either place; if one changes in both, the newer edit wins. Weekly repeats sync both ways; other Google patterns arrive as separate dates. All-day Google events aren’t brought in. Google sign-in lasts about an hour, after which “Sync now” reconnects with one click.</p>`;
+}
+document.addEventListener('change',event=>{
+ const S=gs(),t=event.target;
+ if(t.id==='gcal-client'){const v=t.value.trim();if(v&&!/^[\w.-]+\.apps\.googleusercontent\.com$/.test(v)){toast('That doesn’t look like a Client ID. It should end in .apps.googleusercontent.com.');return}if(v!==S.clientId){S.clientId=v;gToken=null;try{sessionStorage.removeItem(TOKEN_KEY)}catch(e){}save();renderGcal();toast(v?'Client ID saved.':'Client ID removed.')}}
+ if(t.id==='gcal-tasks'){S.sendTasks=t.checked;save();toast(t.checked?'Tasks with due times will sync.':'Task blocks will be removed from Google on the next sync.')}
+ if(t.id==='gcal-calendar'){const c=gCalendars.find(c=>c.id===t.value),id=c?.primary?'primary':t.value;if(id===S.calendarId)return;
+  if(!confirm('Switch calendars? Planner entries will be unlinked from the current calendar (nothing is deleted there) and synced fresh with the new one.')){renderGcal();return}
+  for(const x of [...data.events,...data.tasks])for(const k of ['gid','gUpdated','gFp','gInstanceOf','gOrig','gComplex','gReadOnly','gRec','gOff'])delete x[k];
+  data.events=data.events.filter(e=>!e.gComplex);Object.assign(S,{calendarId:id,calendarName:c?.summary||'',links:{},lastSync:0});save();renderGcal();gSync(true).then(renderGcal)}
+});
+setInterval(()=>{if(data.sync?.connected&&gTokenValid()&&!document.hidden&&!$('#editor').open)gSync(false);else gSetStatus()},5*60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&data.sync?.connected&&gTokenValid()&&Date.now()-(data.sync.lastSync||0)>60000)gSync(false)});
+/* Keyboard shortcuts. Ignored while typing, with modifier keys, or while a dialog is open. */
+const VIEW_ORDER=['today','tasks','calendar','week','meetings','exams','spaces'];
+document.addEventListener('keydown',event=>{
+ if(event.defaultPrevented||event.ctrlKey||event.metaKey||event.altKey||$('#editor').open||$('#shortcuts-dialog').open||$('#gcal-dialog').open)return;
+ if(event.target.closest?.('input, textarea, select, [contenteditable]'))return;
+ const k=event.key.length===1?event.key.toLowerCase():event.key,go=v=>{view=v;query='';spaceFilter='all';statusFilter='open';render()};
+ if(k==='n'){event.preventDefault();$('#main-add').click()}
+ else if(k==='/'){event.preventDefault();if(view!=='today'&&view!=='tasks')go('tasks');$('#task-search')?.focus()}
+ else if(k==='q'){event.preventDefault();toggleHelper(true)}
+ else if(k==='u'){event.preventDefault();undoLast()}
+ else if(k==='?'){event.preventDefault();$('#shortcuts-dialog').showModal()}
+ else if(k==='t'){event.preventDefault();if(view==='week'){weekOffset=0;renderWeek()}else if(view==='calendar'){calendarMonth=today().slice(0,7)+'-01';selectedDate=today();renderCalendar()}else go('today')}
+ else if((k==='ArrowLeft'||k==='ArrowRight')&&(view==='week'||view==='calendar')){event.preventDefault();const step=k==='ArrowLeft'?-1:1;if(view==='week'){weekOffset+=step;renderWeek()}else moveCalendar(step)}
+ else if(/^[1-7]$/.test(k)){event.preventDefault();go(VIEW_ORDER[+k-1])}
+});
+if(!loadIssue)save();render();gSetStatus('');if(data.sync?.connected&&gTokenValid())gSync(false);
+/* Offline helper: deterministic parsing, explicit draft previews, no API calls. */
+const chatMessages=[],chatUndo=new Map();let chatDraft=null;
+function resetChatState(){chatDraft=null;chatUndo.clear();chatMessages.length=0;renderChat()}
+const normalized=s=>String(s).toLowerCase().replace(/[’']/g,'').replace(/[^a-z0-9+]+/g,' ').trim();
+function fullDate(s){return parseDate(s).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'})}
+function chatDate(text,base=today()){
+ const current=parseDate(base),year=current.getFullYear();let match,month,day,y;
+ const finish=(m,d,yr,raw,explicit=false)=>{
+  let date=`${yr}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  if(!validDate(date))return{date:null,match:raw,error:'That date is not valid. What date did you mean?'};
+  if(!explicit&&date<base){date=`${yr+1}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;if(!validDate(date))return{date:null,match:raw,error:'What year is that date in? Include the year, for example 2/29/2028.'}}
+  return{date,match:raw};
+ };
+ if(match=text.match(/\b(\d{4})-(\d{1,2})-(\d{1,2})\b/))return finish(+match[2],+match[3],+match[1],match[0],true);
+ if(match=text.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{4}|\d{2}))?\b/)){y=match[3]?(+match[3]<100?2000+(+match[3]):+match[3]):year;return finish(+match[1],+match[2],y,match[0],!!match[3])}
+ const months=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+ if(match=text.match(/\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?\s+(\d{1,2})(?:st|nd|rd|th)?(?:,?\s+(\d{4}))?\b/i)){month=months.indexOf(match[1].slice(0,3).toLowerCase())+1;return finish(month,+match[2],match[3]?+match[3]:year,match[0],!!match[3])}
+ if(match=text.match(/\b(?:in\s+)?(\d{1,3})\s+days?\b/i))return{date:offsetDate(+match[1],current),match:match[0]};
+ if(match=text.match(/\b(day after tomorrow|tomorrow|tmrw|today|tonight)\b/i))return{date:offsetDate(/day after/i.test(match[0])?2:/tomorrow|tmrw/i.test(match[0])?1:0,current),match:match[0]};
+ if(match=text.match(/\b(?:(next|this)\s+)?(sun(?:day)?|mon(?:day)?|tue(?:sday)?|wed(?:nesday)?|thu(?:rsday)?|fri(?:day)?|sat(?:urday)?)\b/i)){
+  const target=['sun','mon','tue','wed','thu','fri','sat'].indexOf(match[2].slice(0,3).toLowerCase());let days=(target-current.getDay()+7)%7;if(match[1]?.toLowerCase()==='next'&&days===0)days=7;return{date:offsetDate(days,current),match:match[0]};
+ }
+ return{date:null,match:''};
+}
+function matchSpaces(text){
+ const n=' '+normalized(text)+' ',found=[];
+ for(const s of data.spaces){
+  const name=normalized(s.name),words=name.split(' '),meaningful=words.filter(w=>!['fall','spring','summer','winter','programming','systems','2026','2027','2028'].includes(w));
+  const aliases=[name];if(meaningful.length)aliases.push(meaningful.join(' '));
+  const acronym=words.filter(w=>!/^[0-9]+$/.test(w)).map(w=>w[0]).join('');if(acronym.length>=2)aliases.push(acronym);
+  if(/\bc\+\+\b|c\+\+/.test(name))aliases.push('cpp','c++');
+  if(aliases.some(a=>a.length>=2&&n.includes(' '+a+' ')))found.push(s.id);
+ }
+ return found;
+}
+/* Parse only explicit clock times. Missing meridiems are clarified before saving. */
+function chatTimes(text){
+ const date=chatDate(text),source=date.match?text.replace(date.match,' '):text;
+ const token='(?:\\d{1,2})(?::\\d{2})?\\s*(?:a\\.?m\\.?|p\\.?m\\.?)?';
+ const decode=raw=>{
+  const m=raw.trim().match(/^(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m\.?$/i)||raw.trim().match(/^(\d{1,2})(?::(\d{2}))?$/);
+  if(!m)return null;const h=+m[1],minute=+(m[2]||0),meridian=m[3]?.toLowerCase();
+  if(minute>59||h>23||meridian&&(h<1||h>12))return null;
+  const explicit=!!meridian||h>12||h===0||/^0\d:/.test(raw.trim());
+  return{h,minute,explicit,meridian,values:meridian?[(h%12+(meridian==='p'?12:0))*60+minute]:explicit?[h*60+minute]:h>=1&&h<=12?[(h%12)*60+minute,(h%12+12)*60+minute]:[]};
+ };
+ const key=n=>`${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;
+ const range=source.match(new RegExp('\\b(?:from\\s+|at\\s+)?('+token+')\\s*(?:[-–—]|to|until)\\s*('+token+')(?![\\d:]|\\s*[ap]m)','i'));
+ if(range){const a=decode(range[1]),b=decode(range[2]),base={match:range[0],start:null,end:null};
+  if(!a||!b)return{...base,error:'That time is not valid. Use a time like 6:30 pm or 18:30.'};
+  if(!a.explicit&&!b.explicit)return{...base,error:'Is that AM or PM? Please include it, for example “6 to 7 pm” or “18:00 to 19:00”.'};
+  const pairs=a.values.flatMap(start=>b.values.filter(end=>end>start).map(end=>({start,end}))).sort((x,y)=>(x.end-x.start)-(y.end-y.start));
+  if(!pairs.length)return{...base,error:'The end must be after the start on the same day. Please give both times, including AM or PM.'};
+  return{start:key(pairs[0].start),end:key(pairs[0].end),match:range[0],error:''};
+ }
+ const single=source.match(new RegExp('\\b(?:at|from|starts?(?: at)?|until|ends?(?: at)?|to)\\s+('+token+')(?![\\d:])','i'))||source.trim().match(new RegExp('^('+token+')[.!]?$','i'))||source.match(/\b(\d{1,2}(?::\d{2})?\s*[ap]\.?m\.?|\d{1,2}:\d{2})\b/i);
+ if(single){const raw=single[1],t=decode(raw),base={match:single[0],start:null,end:null};
+  if(!t)return{...base,error:'That time is not valid. Use a time like 6:30 pm or 18:30.'};
+  if(!t.explicit)return{...base,error:'Please include AM or PM with the time, for example “6 pm” or “18:00”.'};
+  const time=key(t.values[0]),isEnd=/^(?:until|ends?|to)\b/i.test(single[0]);
+  const duration=source.match(/\bfor\s+(\d+(?:\.\d+)?)\s*(hours?|hrs?|minutes?|mins?)\b/i);
+  if(duration&&!isEnd){const minutes=+duration[1]*(/^h/i.test(duration[2])?60:1),end=t.values[0]+minutes;
+   if(!Number.isInteger(minutes)||minutes<=0||end>=1440)return{...base,error:'Use a positive duration that ends on the same day.'};
+   return{start:time,end:key(end),match:single[0],durationMatch:duration[0],error:''};
+  }
+  return{...base,start:isEnd?null:time,end:isEnd?time:null,error:''};
+ }
+ return{start:null,end:null,match:'',error:''};
+}
+function chatTaskTime(text){
+ const date=chatDate(text),source=date.match?text.replace(date.match,' '):text;
+ const named=source.match(/\b(?:(?:at|by|due(?: at)?)\s+)?(noon|midnight)\b/i);
+ if(named)return{dueTime:named[1].toLowerCase()==='noon'?'12:00':'00:00',match:named[0],error:''};
+ if(!/\b(?:at|by|due(?: at)?)\s+\d|\b\d{1,2}:\d{2}|\b\d{1,2}\s*[ap]\.?m\.?|^\s*\d{1,2}\s*$/i.test(source))return{dueTime:'',match:'',error:''};
+ const parsed=chatTimes(text);
+ if(parsed.error)return{dueTime:'',match:parsed.match,error:parsed.error};
+ if(parsed.start&&parsed.end)return{dueTime:'',match:parsed.match,error:'A task needs one due time. Please use a time like “by 11:59 pm”, or choose no due time.'};
+ if(parsed.start||parsed.end)return{dueTime:parsed.start||parsed.end,match:parsed.match,error:''};
+ return{dueTime:'',match:'',error:'What is the due time? Include AM or PM, for example “11:59 pm”, or use 24-hour time.'};
+}
+function meetingLocation(text){const m=text.match(/\b(?:in|at|location(?: is)?\s*:?)\s+(.+?)\s*$/i);return m?{location:m[1].trim().replace(/[.!]$/,'').slice(0,200),match:m[0]}:{location:'',match:''}}
+function entryCollection(type){return{exam:'exams',event:'events',task:'tasks'}[type]}
+function makeChatDraft(text){
+ const parsed=chatDate(text),type=/\b(meeting|appointment|study block|event)\b/i.test(text)?'event':/\b(exam|quiz|midterm|final|test)\b/i.test(text)?'exam':/\blecture\b/i.test(text)?'event':'task';
+ const times=type==='event'?chatTimes(text):type==='task'?chatTaskTime(text):{},withoutDate=parsed.match?text.replace(parsed.match,' '):text;
+ let cleaned=withoutDate;if(times.match)cleaned=cleaned.replace(times.match,' ');if(times.durationMatch)cleaned=cleaned.replace(times.durationMatch,' ');
+ const location=type==='event'?meetingLocation(cleaned):{location:'',match:''};if(location.match)cleaned=cleaned.replace(location.match,' ');
+ let title=cleaned.replace(/^\s*(?:can|could|would) you\s+(?:please\s+)?/i,'').replace(/^\s*(?:(?:hey\s+)?(?:please\s+)?(?:add|put|schedule|remind me(?: to| about)?|i (?:have|need to|got)|ive got|i’ve got)\s+(?:(?:an?|the)\s+)?)/i,'').replace(/\b(?:urgent|high priority|low priority|medium priority)\b/ig,'').replace(/\s+/g,' ').trim().replace(/\b(?:(?:on|by|due|for|at|from)\s*)+$/i,'').trim().replace(/^[,.;:\s]+|[,.;:\s]+$/g,'');
+ if(!title)title=type==='exam'?'Exam':type==='event'?'Meeting':'New task';
+ const matches=matchSpaces(text),isSGA=/\bsga\b|student government/i.test(text),candidate=isSGA?'SGA':title.match(/^(.{1,60}?)\s+(?:exam|quiz|midterm|final|test|meeting)\b/i)?.[1]?.trim();
+ const proposedSGA=type==='event'&&isSGA&&!sgaSpace()&&!matches.length&&data.spaces.length<100?'SGA':null;
+ return{token:uid(),type,title:title.slice(0,160),date:parsed.date,course:matches.length===1?matches[0]:null,matches,priority:/\b(urgent|high priority|important)\b/i.test(text)?'high':/\blow priority\b/i.test(text)?'low':'normal',notes:'',dateError:parsed.error||'',dueTime:times.dueTime||'',start:times.start||null,end:times.end||null,timeError:times.error||'',location:location.location,newSpace:proposedSGA,candidate:candidate&&!/^(my|an?|the|upcoming)$/i.test(candidate)?candidate:null,confirmed:false};
+}
+
+function chatOptions(buttons){return `<div class="helper-options">${buttons.map(b=>`<button type="button" data-helper-action="${b.action}" ${b.id?`data-id="${esc(b.id)}"`:''} ${b.token?`data-token="${b.token}"`:''} ${b.primary?'class="primary"':''}>${esc(b.label)}</button>`).join('')}</div>`}
+function chatSay(text,buttons=[],html='',role='assistant'){
+ chatMessages.push({text,buttons,html,role});if(chatMessages.length>80)chatMessages.shift();renderChat();
+}
+function renderChat(){
+ const log=$('#helper-log');log.innerHTML=chatMessages.map(m=>`<div class="helper-message ${m.role}">${esc(m.text)}${m.html}${m.buttons.length?chatOptions(m.buttons):''}</div>`).join('');
+ log.querySelectorAll('[data-token]').forEach(b=>{if(b.dataset.helperAction!=='undo'&&b.dataset.token!==chatDraft?.token)b.disabled=true;if(b.dataset.helperAction==='undo'&&!chatUndo.has(b.dataset.token))b.disabled=true});log.scrollTop=log.scrollHeight;
+}
+function askDraft(){
+ const d=chatDraft;if(!d)return;d.token=uid();d.confirmed=false;const cancel=[{label:'Cancel entry',action:'cancel',token:d.token}];
+ if(!d.date){chatSay(d.dateError||`What date is “${d.title}”? You can say tomorrow, Friday, November 7, or 11/7/2026.`,cancel);return}
+ if(d.type==='task'&&(d.timeError||d.awaitingDueTime)){chatSay(d.timeError||'What time is it due? Include AM or PM, like “11:59 pm”, or choose no due time.',[{label:'No due time',action:'skip-due-time',token:d.token},...cancel]);return}
+ if(d.type==='event'){
+  if(d.timeError){chatSay(d.timeError,cancel);return}
+  if(!d.start){chatSay(`What time does “${d.title}” start? You can say “6 to 7 pm”, “at 6 pm for 1 hour”, or “18:00 to 19:00”.`,cancel);return}
+  if(!d.end){chatSay(`It starts at ${niceTime(d.start)}. What time does it end? For example, “until 7 pm”.`,cancel);return}
+  if(d.end<=d.start){chatSay('The end must be after the start on the same day. Please give both times with AM or PM.',cancel);return}
+ }
+ if(!d.course&&!d.newSpace){
+  const possible=d.matches.length?data.spaces.filter(s=>d.matches.includes(s.id)):data.spaces;
+  const buttons=possible.map(s=>({label:s.name,action:'choose-space',id:s.id,token:d.token}));
+  if(d.candidate&&!data.spaces.some(s=>normalized(s.name)===normalized(d.candidate))&&data.spaces.length<100)buttons.push({label:'Create “'+d.candidate+'” space',action:'new-space',token:d.token});
+  buttons.push(...cancel);chatSay(d.matches.length>1?'I found more than one possible space. Which one?':`Which space should I use for “${d.title}”?`,buttons);return;
+ }
+ const name=d.newSpace||space(d.course)?.name;if(!name){d.course=null;askDraft();return}
+ const collection=entryCollection(d.type),duplicate=data[collection].some(x=>x.course===d.course&&x.date===d.date&&normalized(x.title)===normalized(d.title)&&(d.type!=='event'||x.start===d.start&&x.end===d.end)&&(d.type!=='task'||(x.dueTime||'')===(d.dueTime||'')));
+ const conflicts=d.type==='event'?eventsOn(d.date,()=>true).filter(e=>e.start<d.end&&d.start<e.end):[];d.confirmed=true;
+ const buttons=[{label:duplicate?'Add another copy':`Add ${d.type==='event'?'meeting':d.type}`,action:'commit',token:d.token,primary:true}];
+ if(d.type==='task')buttons.push({label:d.dueTime?'Change due time':'Add due time',action:'change-due-time',token:d.token});
+ if(d.type!=='event')buttons.push({label:d.type==='exam'?'Make it a task':'Make it an exam',action:'switch-type',token:d.token});
+ if(d.type==='event')buttons.push({label:'Change time',action:'change-time',token:d.token},{label:d.location?'Change location':'Add location',action:'change-location',token:d.token});
+ buttons.push({label:'Change space',action:'change-space',token:d.token},{label:'Cancel',action:'cancel',token:d.token});
+ chatSay(duplicate?'A matching entry is already in your planner. Add another copy?':conflicts.length?`This overlaps ${conflicts.map(e=>`“${e.title}” (${niceTime(e.start)}–${niceTime(e.end)})`).join(', ')}. Check the times before adding.`:'Here’s what I picked up. Ready to add it?',buttons,
+ `<div class="helper-preview"><small>${d.type==='exam'?'EXAM':d.type==='event'?'MEETING / EVENT':'TASK'}${d.type==='task'?' · '+esc(d.priority==='normal'?'Medium':d.priority)+' priority':''}</small><strong>${esc(d.title)}</strong><small>${esc(fullDate(d.date))}${d.type==='task'&&d.dueTime?' at '+niceTime(d.dueTime):''}</small>${d.type==='task'?`<small>${d.dueTime?'Device local time'+(d.dueTime==='00:00'?' · midnight is the start of this date':''):'No due time set'}</small>`:''}${d.type==='event'?`<small>${niceTime(d.start)} – ${niceTime(d.end)}</small><small>${d.location?esc(d.location):'Location optional · not set'}</small>`:''}<small>${esc(name)}${d.newSpace?' · new space':''}</small></div>`);
+}
+
+function prioritySuggestions(limit=3){
+ const candidates=[];
+ for(const t of data.tasks.filter(t=>!t.done)){
+  const days=diffDays(t.date),weight=t.priority==='high'?18:t.priority==='low'?-6:0;
+  const overdue=taskOverdue(t),minutes=(taskDueAt(t)-Date.now())/60000;
+  const urgency=overdue?130+Math.min(Math.max(-days,0),10):days===0?100+(t.dueTime&&minutes<=120?20:t.dueTime&&minutes<=360?10:0):days===1?80:Math.max(0,65-days*5);
+  candidates.push({type:'task',item:t,score:urgency+weight,why:taskDueLabel(t)+(t.priority==='high'?'; marked high priority':'')});
+ }
+ for(const e of data.exams){const days=diffDays(e.date),remaining=e.topics.filter(t=>!t.done).length;if(days<0||(e.topics.length>0&&!remaining))continue;const urgency=days===0?105:days===1?90:Math.max(0,75-days*5);candidates.push({type:'exam',item:e,score:urgency+Math.min(remaining*2,10),why:(days===0?'exam today':days===1?'exam tomorrow':`exam in ${days} days`)+(e.topics.length?`; ${remaining} topic${remaining===1?'':'s'} left to review`:'; no review checklist yet')})}
+ for(const e of [...eventsBetween(today(),14,()=>true),...data.events.filter(e=>!isRecurring(e)&&diffDays(e.date)>=14)]){const days=diffDays(e.date),now=new Date(),minutes=now.getHours()*60+now.getMinutes(),start=Number(e.start.slice(0,2))*60+Number(e.start.slice(3)),end=Number(e.end.slice(0,2))*60+Number(e.end.slice(3));if(days<0||days===0&&end<=minutes)continue;const score=days===0?(start<=minutes+120?120:85):days===1?70:Math.max(0,60-days*5);candidates.push({type:'event',item:e,score,why:(days===0&&start<=minutes?'in progress':days===0?'today':days===1?'tomorrow':`in ${days} days`)+`; ${niceTime(e.start)}–${niceTime(e.end)}`+(e.location?`; ${e.location}`:'')})}
+ candidates.sort((a,b)=>b.score-a.score||a.item.date.localeCompare(b.item.date)||(a.item.dueTime||a.item.start||'24:00').localeCompare(b.item.dueTime||b.item.start||'24:00'));return candidates.slice(0,limit);
+}
+function answerPriorities(text){const ranked=prioritySuggestions();if(!ranked.length){chatSay('Nothing open to prioritize. Add a task or an upcoming exam when you’re ready.');return}
+ const minutes=text.match(/\b(\d+)\s*(?:minutes?|mins?)\b/i),hour=text.match(/\b(?:an?|one|1)\s+hour\b/i);let reply='I’d start here, based on dates, task due times, task priority, meeting times, and unfinished exam topics:\n\n';
+ reply+=ranked.map((r,i)=>`${i+1}. ${r.item.title}\n${space(r.item.course).name} · ${r.why}.`).join('\n\n');
+ reply+='\n\n'+(minutes||hour?`For your ${minutes?minutes[1]:'60'}-minute block, start with the first item and pick one small step. I don’t have task-duration estimates.`:'Start with one small step on the first item. This is a simple ranking; it doesn’t know your grades or workload.');
+ chatSay(reply,ranked.map(r=>({label:'Open '+r.item.title,action:'open-item',id:r.item.id})));}
+function answerDue(text){
+ let days=0,label='today or earlier';if(/tomorrow/i.test(text)){days=1;label='tomorrow'}else if(/week|coming up|upcoming/i.test(text)){days=6;label='in the next 7 days (plus overdue tasks)'}
+ const overdueOnly=/overdue/i.test(text);if(overdueOnly)label='past the deadline';
+ const tasks=sortedTasks(data.tasks.filter(t=>!t.done&&(overdueOnly?taskOverdue(t):days===1?diffDays(t.date)===1:diffDays(t.date)<=days)));
+ const exams=data.exams.filter(e=>!overdueOnly&&diffDays(e.date)>=0&&(days===1?diffDays(e.date)===1:diffDays(e.date)<=days)).sort((a,b)=>a.date.localeCompare(b.date));
+ const events=overdueOnly?[]:days===1?eventsOn(offsetDate(1),()=>true):eventsBetween(today(),days+1,()=>true);
+ const list=[...events.map(e=>`• ${e.title} (meeting/event) — ${fullDate(e.date)}, ${niceTime(e.start)}–${niceTime(e.end)}${e.location?' · '+e.location:''}`),...tasks.map(t=>`• ${t.title} — ${taskDueLabel(t)}`),...exams.map(e=>`• ${e.title} (exam) — ${fullDate(e.date)}`)];chatSay(list.length?`${overdueOnly?'These tasks are overdue':'Here’s what’s due '+label}:\n\n${list.slice(0,15).join('\n')}${list.length>15?'\n\nMore entries are available in Tasks and Exam prep.':''}`:overdueOnly?'No overdue tasks.':`No tasks, exams, or meetings due ${label}.`);
+}
+function handleChat(text){
+ text=text.trim();if(!text)return;chatSay(text,[],'','user');
+ if(/^undo[.!]?$/i.test(text)){const token=Array.from(chatUndo.keys()).at(-1);if(token)undoChat(token);else chatSay('There’s no quick entry to undo in this chat.');return}
+ if(/^(?:cancel|never mind|nevermind|stop|forget it)[.!]?$/i.test(text)){chatDraft=null;chatSay('Draft canceled. Your saved entries haven’t changed.');return}
+ if(/^(?:what|when|where|show|list|do i|any|which)\b/i.test(text)&&/\b(meetings?|appointments?|events?|schedule|calendar)\b/i.test(text)&&!/\b(?:add|schedule a)\b/i.test(text)){answerSchedule(text);return}
+ if(/\b(prioriti[sz]e|priorities|what(?:’s|'s| is)? (?:my |the )?(?:top )?priority|focus|what (?:should|do|can) i (?:work|do|study)|what comes first|where (?:do|should) i start)\b/i.test(text)){answerPriorities(text);return}
+ if(/\b(?:what(?:s|’s|'s| is)?|show|list|anything)\b.*\b(due|upcoming|coming up|overdue)\b|\b(?:due|coming up) this week\b/i.test(text)){answerDue(text);return}
+ if(/^(?:hi|hello|hey|help|what can (?:i say|you do))\??[.!]?$/i.test(text)){chatSay('I can quick-add tasks, exams, and meetings, show your schedule, and rank what to tackle first. Try “SGA meeting tomorrow from 6 to 7 pm in Connelly”, “CPE exam on 11/7”, “C++ homework tomorrow at 11:59 pm”, or “what meetings do I have this week?”\n\nI’ll ask for missing dates, AM/PM, and end times, then show a preview before saving. To make a meeting repeat weekly, open it and pick its days. Use an entry’s edit control to change a saved item.');return}
+ if(!chatDraft&&/^(?:what|why|how|when|where|who|can you|could you)\b/i.test(text)&&!/\b(?:add|remind|schedule)\b/i.test(text)){chatSay('I can answer planner questions about deadlines and priorities. For example, ask “what’s due this week?” or “what should I prioritize?”');return}
+ if(chatDraft){
+  if(chatDraft.type==='task'){
+   const parsed=chatDate(text),timing=chatTaskTime(text);
+   if(timing.match||timing.error||chatDraft.awaitingDueTime){
+    let rest=text;if(parsed.match)rest=rest.replace(parsed.match,' ');if(timing.match)rest=rest.replace(timing.match,' ');
+    rest=rest.toLowerCase().replace(/\b(?:actually|no|its|it's|make|it|due|on|by|instead|the|date|time|is|sorry|please|change|to|and|at)\b/g,'').replace(/[^a-z0-9]+/g,'');
+    if(rest&&!timing.error){chatSay('There’s an unfinished task. Reply with just its due date or time, or say “cancel” before starting another.');return}
+    if(parsed.error){chatDraft.dateError=parsed.error;chatDraft.date=null;askDraft();return}
+    if(parsed.date){chatDraft.date=parsed.date;chatDraft.dateError=''}
+    if(timing.error||!timing.dueTime){chatDraft.timeError=timing.error||'Include a due time like “11:59 pm”, or choose no due time.';askDraft();return}
+    chatDraft.dueTime=timing.dueTime;chatDraft.timeError='';chatDraft.awaitingDueTime=false;askDraft();return;
+   }
+  }
+  if(chatDraft.type==='event'){
+   if(chatDraft.awaitingLocation){chatDraft.location=/^(?:skip|none|no location)[.!]?$/i.test(text)?'':text.replace(/^(?:in|at|location(?: is)?\s*:?)\s+/i,'').trim().slice(0,200);chatDraft.awaitingLocation=false;askDraft();return}
+   const parsed=chatDate(text),times=chatTimes(text);
+   if(parsed.date||parsed.error||times.match||times.error){
+    let rest=text;if(parsed.match)rest=rest.replace(parsed.match,' ');if(times.match)rest=rest.replace(times.match,' ');if(times.durationMatch)rest=rest.replace(times.durationMatch,' ');
+    const loc=meetingLocation(rest);if(loc.match)rest=rest.replace(loc.match,' ');
+    rest=rest.toLowerCase().replace(/\b(?:actually|no|its|it's|make|it|due|on|by|instead|the|date|time|is|sorry|please|change|to|and|starts|ends|from|at)\b/g,'').replace(/[^a-z0-9]+/g,'');
+    if(rest){chatSay('There’s an unfinished meeting. Reply with just its date, times, or location, or say “cancel” before adding another.');return}
+    if(parsed.error){chatDraft.dateError=parsed.error;chatDraft.date=null;askDraft();return}
+    if(parsed.date){chatDraft.date=parsed.date;chatDraft.dateError=''}
+    if(times.error){chatDraft.timeError=times.error;askDraft();return}
+    if(times.match){
+     chatDraft.timeError='';
+     if(times.start&&times.end){chatDraft.start=times.start;chatDraft.end=times.end}
+     else if(times.end)chatDraft.end=times.end;
+     else if(times.start){if(chatDraft.start&&!chatDraft.end&&!/\b(?:at|from|start|change|actually)\b/i.test(text))chatDraft.end=times.start;else chatDraft.start=times.start}
+    }
+    if(loc.location)chatDraft.location=loc.location;
+    askDraft();return;
+   }
+   if(/^(?:in|at|location(?: is)?\s*:?)\s+/i.test(text)){chatDraft.location=meetingLocation(text).location;askDraft();return}
+  }
+  const parsed=chatDate(text);if(parsed.date){const rest=text.replace(parsed.match,'').toLowerCase().replace(/\b(?:actually|no|its|it's|make|it|due|on|by|instead|the|date|is|sorry|please|change|to)\b/g,'').replace(/[^a-z0-9]+/g,'').trim();if(rest){chatSay('There’s already an unfinished entry. Say “cancel” before adding another, or reply with just its date.');return}chatDraft.date=parsed.date;chatDraft.dateError='';chatDraft.confirmed=false;askDraft();return}
+  if(parsed.error){chatSay(parsed.error);return}
+  const found=matchSpaces(text);if(found.length===1){chatDraft.course=found[0];chatDraft.newSpace=null;chatDraft.confirmed=false;askDraft();return}
+  if(/^(?:yes|add it|save it|go ahead|okay|ok)[.!]?$/i.test(text)&&chatDraft.confirmed){commitChatDraft(chatDraft.token);return}
+  chatSay('There’s an unfinished entry. Choose one of its options, tell me its date, time, or space, or say “cancel” before starting a different entry.');return;
+ }
+ if(/\b(?:move|reschedule|change|delete|remove|finished|completed|done with|pushed|postponed)\b/i.test(text)){chatSay('Use the entry’s edit or check-off control for changes to existing items. I can quick-add new tasks and exams, but I won’t guess which existing entry to change.');return}
+ const dates=text.match(/\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b/g)||[];
+ if(dates.length>1||/\b(?:and|also)\b.+\b(?:tomorrow|today|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i.test(text)&&chatDate(text).date){chatSay('That looks like more than one entry. Send one at a time so I can keep each deadline straight.');return}
+ if(!chatDate(text).date&&!chatDate(text).error&&!/\b(?:add|task|assignment|homework|exam|quiz|test|midterm|final|finish|study|review|read|submit|practice|buy|call|email|pay|project|meeting|appointment|lecture|event)\b/i.test(text)){chatSay('I can help with planner entries and deadlines. Try “finish math homework tomorrow” or ask “what should I prioritize?”');return}
+ if(/\b(?:every|weekly|biweekly|daily|recurring)\b/i.test(text)){chatSay('Quick entries add the first date. Send it like “SGA meeting Monday from 6 to 7 pm”, then open the meeting and pick its repeat days.');return}
+ chatDraft=makeChatDraft(text);askDraft();
+}
+function commitChatDraft(token){
+ const d=chatDraft;if(!d||d.token!==token||!d.confirmed||!validDate(d.date))return;
+ if(d.type==='task'&&d.dueTime&&!validTime(d.dueTime))return;
+ if(d.type==='event'&&(!validTime(d.start)||!validTime(d.end)||d.end<=d.start))return;
+ if(!d.newSpace&&!space(d.course)){d.course=null;d.confirmed=false;askDraft();return}
+ let createdSpace=null;if(d.newSpace){const existing=data.spaces.find(s=>normalized(s.name)===normalized(d.newSpace));if(existing)d.course=existing.id;else{if(data.spaces.length>=100){chatSay('You already have 100 spaces. Choose an existing one.');d.newSpace=null;askDraft();return}createdSpace={id:uid(),name:d.newSpace,color:'#4c8cc9'};data.spaces.push(createdSpace);d.course=createdSpace.id}}
+ const item={id:uid(),title:d.title,course:d.course,date:d.date,notes:d.notes};if(d.type==='exam')item.topics=[];else if(d.type==='event')Object.assign(item,{start:d.start,end:d.end,location:d.location||''});else Object.assign(item,{dueTime:d.dueTime||'',priority:d.priority,done:false});
+ const collection=entryCollection(d.type);data[collection].push(item);const undoToken=uid();chatUndo.set(undoToken,{collection,id:item.id,snapshot:JSON.stringify(item),createdSpace});
+ chatDraft=null;query='';statusFilter='open';if(spaceFilter!=='all'&&spaceFilter!==item.course)spaceFilter='all';save();render();chatSay(`Added “${item.title}” to ${space(item.course).name} for ${fullDate(item.date)}${d.type==='task'&&item.dueTime?' at '+niceTime(item.dueTime):''}${d.type==='event'?' at '+niceTime(item.start)+'–'+niceTime(item.end)+(item.location?' · '+item.location:''):''}.${storageOK&&!blockedWrite?'':' Browser saving is unavailable; export a backup before closing.'}`,makeEntryButtons(item,undoToken,d.type));
+}
+function makeEntryButtons(item,undoToken,type){return [{label:type==='event'?'View meetings':'View priorities',action:type==='event'?'show-meetings':'show-priorities'},{label:'Undo',action:'undo',token:undoToken},{label:'Open entry',action:'open-item',id:item.id}];
+}
+function undoChat(token){
+ const undo=chatUndo.get(token);if(!undo)return;const current=data[undo.collection].find(x=>x.id===undo.id);if(!current||JSON.stringify(current)!==undo.snapshot){chatUndo.delete(token);chatSay('That entry has changed since it was added. Open it to edit or delete it without losing your changes.');return}
+ data[undo.collection]=data[undo.collection].filter(x=>x.id!==undo.id);
+ if(undo.createdSpace&&data.spaces.length>1&&!['tasks','events','exams'].some(k=>data[k].some(x=>x.course===undo.createdSpace.id))&&JSON.stringify(space(undo.createdSpace.id))===JSON.stringify(undo.createdSpace)){data.spaces=data.spaces.filter(s=>s.id!==undo.createdSpace.id);if(spaceFilter===undo.createdSpace.id)spaceFilter='all'}
+ chatUndo.delete(token);save();render();chatSay('Undone. That quick entry was removed.');
+}
+function toggleHelper(open){$('#helper-panel').hidden=!open;$('#helper-toggle').setAttribute('aria-expanded',String(open));if(open){if(!chatMessages.length)chatSay('Hey Gilbert! Tell me a task, exam, or meeting to add, or ask what to tackle first.\n\nTry “SGA meeting tomorrow from 6 to 7 pm in Connelly”. I’ll show what I understood before saving.');$('#helper-input').focus()}else $('#helper-toggle').focus()}
+$('#helper-toggle').addEventListener('click',()=>toggleHelper($('#helper-panel').hidden));$('#helper-close').addEventListener('click',()=>toggleHelper(false));
+$('#helper-form').addEventListener('submit',event=>{event.preventDefault();const text=$('#helper-input').value;$('#helper-input').value='';handleChat(text);$('#helper-input').focus()});
+$('#helper-input').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();$('#helper-form').requestSubmit()}});
+$('#helper-panel').addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();toggleHelper(false)}});
+$('#helper-panel').addEventListener('click',event=>{
+ const button=event.target.closest('button');if(!button||button.disabled)return;
+ if(button.dataset.chatPrompt){handleChat(button.dataset.chatPrompt);return}
+ const action=button.dataset.helperAction,token=button.dataset.token,id=button.dataset.id;
+ if(action==='show-calendar'){view='calendar';calendarMonth=today().slice(0,7)+'-01';selectedDate=today();spaceFilter='all';render();toggleHelper(false);return}
+ if(action==='show-meetings'){view='meetings';spaceFilter='all';render();toggleHelper(false);return}
+ if(action==='show-priorities'){view='today';spaceFilter='all';statusFilter='open';query='';render();toggleHelper(false);return}
+ if(action==='open-item'){const type=data.tasks.some(x=>x.id===id)?'task':data.exams.some(x=>x.id===id)?'exam':data.events.some(x=>x.id===id)?'event':null;if(type)openEditor(type,id);else chatSay('That entry is no longer in your planner.');return}
+ if(action==='undo'){undoChat(token);return}
+ if(!chatDraft||chatDraft.token!==token)return;
+ if(action==='cancel'){chatDraft=null;chatSay('Draft canceled. Nothing added.');return}
+ if(action==='commit'){commitChatDraft(token);return}
+ if(action==='choose-space'){if(space(id)){chatDraft.course=id;chatDraft.newSpace=null;askDraft()}return}
+ if(action==='new-space'){chatDraft.newSpace=chatDraft.candidate;chatDraft.course=null;askDraft();return}
+ if(action==='change-space'){chatDraft.course=null;chatDraft.newSpace=null;chatDraft.matches=[];askDraft();return}
+ if(action==='change-due-time'){chatDraft.awaitingDueTime=true;chatDraft.timeError='';askDraft();return}
+ if(action==='skip-due-time'){chatDraft.dueTime='';chatDraft.awaitingDueTime=false;chatDraft.timeError='';askDraft();return}
+ if(action==='change-time'){chatDraft.start=null;chatDraft.end=null;chatDraft.timeError='';askDraft();return}
+ if(action==='change-location'){chatDraft.awaitingLocation=true;chatDraft.confirmed=false;chatDraft.token=uid();chatSay('Where is the meeting? Type the place, or say “skip” to leave it blank.',[{label:'Skip location',action:'skip-location',token:chatDraft.token},{label:'Cancel entry',action:'cancel',token:chatDraft.token}]);return}
+ if(action==='skip-location'){chatDraft.location='';chatDraft.awaitingLocation=false;askDraft();return}
+ if(action==='switch-type'){chatDraft.type=chatDraft.type==='exam'?'task':'exam';askDraft()}
+});
+
+let displayedDay=today(),displayedMinute=Math.floor(Date.now()/60000);
+function refreshDay(){const minute=Math.floor(Date.now()/60000);if(dragInfo||$('#shortcuts-dialog').open||$('#gcal-dialog').open||today()===displayedDay&&minute===displayedMinute||$('#editor').open||document.activeElement?.matches('input, textarea, select'))return;displayedDay=today();displayedMinute=minute;render()}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshDay()});
+setInterval(refreshDay,30000);
+
+</script></body></html>

@@ -83,6 +83,11 @@ code{font:12px ui-monospace,Consolas,monospace;background:var(--surface);border:
 .gcal-note{color:var(--accent)}
 .danger-notice{background:var(--danger-tint);border-left-color:var(--red)}
 details>summary{cursor:pointer}
+.tg-event{background:var(--course);color:var(--ev-ink,#fff);border-left:0;border-radius:5px;padding:3px 7px;gap:0;line-height:1.25;box-shadow:0 0 0 1px var(--paper)}
+.tg-event:hover{background:var(--course);filter:brightness(1.08)}
+.tg-event strong{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tg-event small{color:inherit;opacity:.92;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tg-col{background-image:repeating-linear-gradient(to bottom,var(--line) 0,var(--line) 1px,transparent 1px,transparent var(--hour))}
 @media(max-width:680px){.tg-inner{min-width:720px}.tg-scroll{max-height:520px}.mobile-backup{flex-wrap:wrap}}
 
 </style></head><body>
@@ -120,8 +125,8 @@ function validDate(s){if(typeof s!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(s))ret
 const validTime=s=>typeof s==='string'&&/^([01]\d|2[0-3]):[0-5]\d$/.test(s), validID=s=>typeof s==='string'&&/^[\w-]{1,100}$/.test(s), validColor=s=>typeof s==='string'&&/^#[0-9a-f]{6}$/i.test(s);
 /* Google sync fields ride along on tasks/events; anything malformed is dropped rather than trusted. */
 function validGid(v){return typeof v==='string'&&/^[A-Za-z0-9_\-@.]{1,1024}$/.test(v)}
-function gKeep(x){const o={};if(validGid(x.gid))o.gid=x.gid;if(validGid(x.gInstanceOf))o.gInstanceOf=x.gInstanceOf;for(const k of ['gUpdated','gFp','gOrig'])if(typeof x[k]==='string'&&x[k].length<=20000)o[k]=x[k];for(const k of ['gComplex','gOff','gReadOnly','gRec'])if(x[k]===true)o[k]=true;if(Number.isFinite(x.mod))o.mod=x.mod;return o}
-function sanitizeSync(v){v=v&&typeof v==='object'?v:{};const str=(x,max)=>typeof x==='string'?x.slice(0,max):'';return{clientId:/^[\w.-]{1,200}$/.test(v.clientId||'')?v.clientId:'',calendarId:str(v.calendarId,300)||'primary',calendarName:str(v.calendarName,200),lastSync:Number.isFinite(v.lastSync)?v.lastSync:0,links:Object.fromEntries(Object.keys(v.links&&typeof v.links==='object'?v.links:{}).filter(validGid).slice(0,20000).map(k=>[k,1])),sendTasks:v.sendTasks!==false,connected:v.connected===true}}
+function gKeep(x){const o={};if(validGid(x.gid))o.gid=x.gid;if(validGid(x.gInstanceOf))o.gInstanceOf=x.gInstanceOf;for(const k of ['gUpdated','gFp','gOrig'])if(typeof x[k]==='string'&&x[k].length<=20000)o[k]=x[k];for(const k of ['gComplex','gOff','gReadOnly','gRec'])if(x[k]===true)o[k]=true;if(typeof x.gColor==='string'&&/^#[0-9a-f]{6}$/i.test(x.gColor))o.gColor=x.gColor;if(Number.isFinite(x.mod))o.mod=x.mod;return o}
+function sanitizeSync(v){v=v&&typeof v==='object'?v:{};const str=(x,max)=>typeof x==='string'?x.slice(0,max):'';return{calendarColor:/^#[0-9a-f]{6}$/i.test(v.calendarColor||'')?v.calendarColor:'',clientId:/^[\w.-]{1,200}$/.test(v.clientId||'')?v.clientId:'',calendarId:str(v.calendarId,300)||'primary',calendarName:str(v.calendarName,200),lastSync:Number.isFinite(v.lastSync)?v.lastSync:0,links:Object.fromEntries(Object.keys(v.links&&typeof v.links==='object'?v.links:{}).filter(validGid).slice(0,20000).map(k=>[k,1])),sendTasks:v.sendTasks!==false,connected:v.connected===true}}
 /* Version 1 backups use the four original spaces; version 2 includes editable spaces. */
 function validate(raw){
  if(!raw||![1,2,3].includes(raw.version)||!['tasks','events','exams'].every(k=>Array.isArray(raw[k])&&raw[k].length<=2000))throw Error('This is not a supported planner backup.');
@@ -168,6 +173,14 @@ function occursOn(e,date){if(!isRecurring(e))return e.date===date;return date>=e
 function eventsOn(date,filter=relevant){return data.events.filter(e=>filter(e)&&occursOn(e,date)).map(e=>({...e,date})).sort((a,b)=>a.start.localeCompare(b.start))}
 function eventsBetween(from,days,filter=relevant){const out=[];for(let i=0;i<days;i++)out.push(...eventsOn(offsetDate(i,parseDate(from)),filter));return out}
 const repeatLabel=e=>isRecurring(e)?'Every '+e.repeatDays.map(d=>WEEKDAYS[d]).join(', ')+(e.repeatUntil?' until '+shortDate(e.repeatUntil):''):'';
+/* Events use their own Google color when they have one, otherwise their space color. */
+const evColor=e=>validColor(e.gColor)?e.gColor:space(e.course).color;
+/* White text on most colors; dark text only on very light ones (WCAG relative luminance). */
+function inkFor(hex){const n=parseInt(hex.slice(1),16),lum=[n>>16&255,n>>8&255,n&255].map(v=>{v/=255;return v<=.03928?v/12.92:((v+.055)/1.055)**2.4});return .2126*lum[0]+.7152*lum[1]+.0722*lum[2]>.6?'#1d2735':'#fff'}
+/* "9:35am", "11am" — the compact style Google uses inside event blocks. */
+const compactTime=t=>{const [h,m]=t.split(':').map(Number);return `${h%12||12}${m?':'+String(m).padStart(2,'0'):''}${h<12?'am':'pm'}`};
+/* Agenda hides classes and other repeating events unless you ask for them (remembered per browser). */
+let showRoutine=false;try{showRoutine=localStorage.getItem('gilbert-show-repeating')==='1'}catch(e){}
 const toMin=t=>Number(t.slice(0,2))*60+Number(t.slice(3,5)),toKey=n=>`${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;
 const spaceLabel=id=>{const s=space(id);return `<span class="space-label"><span class="dot" style="--course:${s.color}"></span>${esc(s.name)}</span>`};
 function save(){stampChanges();if(!blockedWrite){try{localStorage.setItem(KEY,JSON.stringify(data));storageOK=true;loadIssue=''}catch(e){storageOK=false}}saveLabel();gQueue()}
@@ -211,7 +224,7 @@ function groupedEntries(entries){
 function taskList(){
  const search=query.trim().toLowerCase(),matches=x=>relevant(x)&&(x.title.toLowerCase().includes(search)||(x.notes||'').toLowerCase().includes(search));
  if(view==='today'){
-  const ranked=prioritySuggestions(Infinity).filter(r=>matches(r.item));
+  const ranked=prioritySuggestions(Infinity).filter(r=>matches(r.item)&&(showRoutine||r.type!=='event'||!(isRecurring(r.item)||r.item.gInstanceOf)));
   const completed=[...sortedTasks(data.tasks.filter(t=>t.done)).map(item=>({type:'task',item})),...data.exams.filter(e=>diffDays(e.date)>=0&&e.topics.length>0&&e.topics.every(t=>t.done)).map(item=>({type:'exam',item}))].filter(r=>matches(r.item));
   const entries=statusFilter==='done'?completed:statusFilter==='all'?[...ranked,...completed]:ranked;
   return groupedEntries(entries)||empty('No matching entries.','Add a task or change the filters.','add-task','Add a task');
@@ -227,11 +240,11 @@ function stats(){
  return `<div class="stats" aria-label="Assignment summary">${values.map(([label,n,sub,style])=>`<div class="stat ${style}"><div class="stat-top">${label}</div><strong>${n}</strong><small>${sub}</small></div>`).join('')}</div>`;
 }
 
-function eventRow(e,showDate=false){return `<div class="event-item"><span class="event-line" style="--course:${space(e.course).color}"></span><div class="event-info"><strong>${esc(e.title)}</strong><small>${showDate?esc(shortDate(e.date))+' · ':''}${niceTime(e.start)} – ${niceTime(e.end)}${e.location?' · '+esc(e.location):''}</small><small>${esc(space(e.course).name)}${isRecurring(e)?' · ↻ repeats':''}</small></div><button class="icon-btn" data-action="edit-event" data-id="${e.id}" data-occ="${e.date}" aria-label="Edit ${esc(e.title)}">✎</button></div>`}
+function eventRow(e,showDate=false){return `<div class="event-item"><span class="event-line" style="--course:${evColor(e)}"></span><div class="event-info"><strong>${esc(e.title)}</strong><small>${showDate?esc(shortDate(e.date))+' · ':''}${niceTime(e.start)} – ${niceTime(e.end)}${e.location?' · '+esc(e.location):''}</small><small>${esc(space(e.course).name)}${isRecurring(e)?' · ↻ repeats':''}</small></div><button class="icon-btn" data-action="edit-event" data-id="${e.id}" data-occ="${e.date}" aria-label="Edit ${esc(e.title)}">✎</button></div>`}
 function todaySide(){const events=eventsOn(today(),()=>true),upcoming=eventsBetween(offsetDate(1),60,()=>true).slice(0,3),next=data.exams.filter(e=>diffDays(e.date)>=0).sort((a,b)=>a.date.localeCompare(b.date))[0],complete=next?next.topics.filter(t=>t.done).length:0;return `<div class="stack"><section class="panel"><div class="panel-head"><h2>Meetings & events</h2><button class="text-button" data-action="add-meeting">+ Meeting</button></div><div class="small-body">${events.length?events.map(e=>eventRow(e)).join(''):'<p class="muted" style="font-size:12px">No meetings scheduled today.</p>'}${upcoming.length?`<p class="eyebrow" style="margin-top:18px">Coming up</p>${upcoming.map(e=>eventRow(e,true)).join('')}`:''}<button class="text-button" data-view="meetings" style="margin-top:12px">All meetings & events →</button></div></section><section class="panel"><div class="panel-head"><h2>Notes</h2><small></small></div><div class="small-body"><label class="sr-only" for="quick-notes">Notes</label><textarea class="notes" id="quick-notes" maxlength="10000" placeholder="Notes and reminders…">${esc(data.notes)}</textarea></div></section>${next?`<section class="panel"><div class="small-body"><div class="eyebrow">Next exam</div><h2 style="margin-top:9px">${esc(next.title)}</h2><p class="muted" style="font-size:11px;margin-top:5px">${shortDate(next.date)} · ${complete}/${next.topics.length} topics reviewed</p><div class="progress"><span style="width:${next.topics.length?complete/next.topics.length*100:0}%"></span></div><button class="text-button" data-view="exams" style="margin-top:9px">Open study checklist →</button></div></section>`:''}</div>`}
 function sgaSpace(){return data.spaces.find(s=>/\bsga\b|student government/i.test(s.name))}
 function ensureSGASpace(){let s=sgaSpace();if(!s&&data.spaces.length<100){s={id:uid(),name:'SGA',color:'#2879b8'};data.spaces.push(s);save()}return s}
-function renderMeetings(){const upcoming=eventsBetween(today(),60),series=data.events.filter(e=>relevant(e)&&isRecurring(e)),past=data.events.filter(e=>relevant(e)&&!isRecurring(e)&&e.date<today()).sort((a,b)=>b.date.localeCompare(a.date)||b.start.localeCompare(a.start));$('#content').innerHTML=`<div class="view-tools"><p class="muted" style="font-size:12px">Keep SGA meetings, appointments, and study blocks in one place.</p><select id="space-filter" class="space-filter" aria-label="Filter by space">${spaceOptions(spaceFilter)}</select></div>${series.length?`<section class="panel" style="margin-bottom:24px"><div class="panel-head"><h2>Repeating events</h2><small>${series.length} weekly series</small></div><div class="small-body">${series.map(e=>`<div class="event-item"><span class="event-line" style="--course:${space(e.course).color}"></span><div class="event-info"><strong>${esc(e.title)}</strong><small>↻ ${esc(repeatLabel(e))} · ${niceTime(e.start)} – ${niceTime(e.end)}${e.location?' · '+esc(e.location):''}</small><small>${esc(space(e.course).name)} · starts ${esc(shortDate(e.date))}</small></div><button class="icon-btn" data-action="edit-event" data-id="${e.id}" aria-label="Edit ${esc(e.title)}">✎</button></div>`).join('')}</div></section>`:''}<section class="panel"><div class="panel-head"><h2>Upcoming meetings & events</h2><small>${upcoming.length} in the next 60 days</small></div><div class="small-body">${upcoming.length?upcoming.map(e=>eventRow(e,true)).join(''):empty('No meetings scheduled.','Add your next meeting here or through the planner helper.','add-meeting','Add a meeting')}</div></section>${past.length?`<details style="margin-top:20px"><summary class="text-button">Past meetings & events (${past.length})</summary><section class="panel" style="margin-top:12px"><div class="small-body">${past.map(e=>eventRow(e,true)).join('')}</div></section></details>`:''}`}
+function renderMeetings(){const upcoming=eventsBetween(today(),60),series=data.events.filter(e=>relevant(e)&&isRecurring(e)),past=data.events.filter(e=>relevant(e)&&!isRecurring(e)&&e.date<today()).sort((a,b)=>b.date.localeCompare(a.date)||b.start.localeCompare(a.start));$('#content').innerHTML=`<div class="view-tools"><p class="muted" style="font-size:12px">Keep SGA meetings, appointments, and study blocks in one place.</p><select id="space-filter" class="space-filter" aria-label="Filter by space">${spaceOptions(spaceFilter)}</select></div>${series.length?`<section class="panel" style="margin-bottom:24px"><div class="panel-head"><h2>Repeating events</h2><small>${series.length} weekly series</small></div><div class="small-body">${series.map(e=>`<div class="event-item"><span class="event-line" style="--course:${evColor(e)}"></span><div class="event-info"><strong>${esc(e.title)}</strong><small>↻ ${esc(repeatLabel(e))} · ${niceTime(e.start)} – ${niceTime(e.end)}${e.location?' · '+esc(e.location):''}</small><small>${esc(space(e.course).name)} · starts ${esc(shortDate(e.date))}</small></div><button class="icon-btn" data-action="edit-event" data-id="${e.id}" aria-label="Edit ${esc(e.title)}">✎</button></div>`).join('')}</div></section>`:''}<section class="panel"><div class="panel-head"><h2>Upcoming meetings & events</h2><small>${upcoming.length} in the next 60 days</small></div><div class="small-body">${upcoming.length?upcoming.map(e=>eventRow(e,true)).join(''):empty('No meetings scheduled.','Add your next meeting here or through the planner helper.','add-meeting','Add a meeting')}</div></section>${past.length?`<details style="margin-top:20px"><summary class="text-button">Past meetings & events (${past.length})</summary><section class="panel" style="margin-top:12px"><div class="small-body">${past.map(e=>eventRow(e,true)).join('')}</div></section></details>`:''}`}
 
 function render(){
  const titles={today:'Agenda',tasks:'Tasks',week:'Weekly schedule',exams:'Exam preparation',spaces:'Courses & spaces',meetings:'Meetings',calendar:'Calendar'};$('#page-title').textContent=titles[view];$('#date-label').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
@@ -239,7 +252,7 @@ function render(){
  const kind={exams:'exam',week:'event',meetings:'meeting',spaces:'space'}[view]||'task';$('#main-add').dataset.action='add-'+kind;$('#main-add').textContent='+ Add '+kind;$('#main-add').dataset.date=view==='calendar'?selectedDate:today();
  $('#space-keys').innerHTML=data.spaces.map(s=>`<button class="space-key" data-action="show-space" data-id="${s.id}"><span class="dot" style="--course:${s.color}"></span><span>${esc(s.name)}</span></button>`).join('');
  $('#sample-banner').innerHTML=data.sample?'<div class="sample"><span><strong>Example plan.</strong> Edit these entries, or start fresh. Spaces stay editable.</span><button data-action="clear-samples">Start fresh</button></div>':'';
- if(view==='today'||view==='tasks'){$('#content').innerHTML=stats()+`<div class="${view==='today'?'layout':''}"><section class="panel"><div class="panel-head"><h2>${view==='today'?'Assignments & schedule':'Task list'}</h2><small>Grouped by deadline · times are local</small></div>${filters()}${entryListHead()}<div id="task-list">${taskList()}</div></section>${view==='today'?todaySide():''}</div>`}
+ if(view==='today'||view==='tasks'){$('#content').innerHTML=stats()+`<div class="${view==='today'?'layout':''}"><section class="panel"><div class="panel-head"><h2>${view==='today'?'Assignments & schedule':'Task list'}</h2>${view==='today'?`<button class="text-button" data-action="toggle-routine" aria-pressed="${showRoutine}">${showRoutine?'Hide':'Show'} classes &amp; repeating events</button>`:'<small>Grouped by deadline · times are local</small>'}</div>${filters()}${entryListHead()}<div id="task-list">${taskList()}</div></section>${view==='today'?todaySide():''}</div>`}
  else if(view==='week')renderWeek();else if(view==='exams')renderExams();else if(view==='meetings')renderMeetings();else if(view==='calendar')renderCalendar();else renderSpaces();saveLabel();
 }
 function weekStart(){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-d.getDay()+weekOffset*7);return d}
@@ -248,7 +261,7 @@ function renderCalendar(){
  $('#main-add').dataset.date=selectedDate;
  const first=parseDate(calendarMonth),offset=first.getDay(),start=offsetDate(-offset,first),monthLabel=first.toLocaleDateString(undefined,{month:'long',year:'numeric'});
  const tasks=sortedTasks(data.tasks.filter(t=>t.date===selectedDate&&relevant(t))),exams=data.exams.filter(e=>e.date===selectedDate&&relevant(e)),events=eventsOn(selectedDate);
- const chip=(x,type)=>`<button class="calendar-entry ${type==='task'&&x.done?'finished':''}" style="--course:${space(x.course).color}" draggable="true" data-drag="${type}" data-action="edit-${type}" data-id="${x.id}" data-occ="${x.date}" title="${esc(x.title)}${type==='event'?' · '+niceTime(x.start)+'–'+niceTime(x.end):type==='task'?' · '+esc(taskExactDue(x)):''}">${type==='exam'?'◇ ':type==='event'?niceTime(x.start)+' ':type==='task'&&x.dueTime?niceTime(x.dueTime)+' · ':x.done?'✓ ':'• '}${esc(x.title)}</button>`;
+ const chip=(x,type)=>`<button class="calendar-entry ${type==='task'&&x.done?'finished':''}" style="--course:${type==='event'?evColor(x):space(x.course).color}" draggable="true" data-drag="${type}" data-action="edit-${type}" data-id="${x.id}" data-occ="${x.date}" title="${esc(x.title)}${type==='event'?' · '+niceTime(x.start)+'–'+niceTime(x.end):type==='task'?' · '+esc(taskExactDue(x)):''}">${type==='exam'?'◇ ':type==='event'?niceTime(x.start)+' ':type==='task'&&x.dueTime?niceTime(x.dueTime)+' · ':x.done?'✓ ':'• '}${esc(x.title)}</button>`;
  $('#content').innerHTML=`<div class="view-tools"><div class="week-controls"><button class="btn" data-action="prev-month" aria-label="Previous month">←</button><strong>${esc(monthLabel)}</strong><button class="btn" data-action="next-month" aria-label="Next month">→</button><button class="btn" data-action="current-month">Today</button></div><select id="space-filter" class="space-filter" aria-label="Filter by space">${spaceOptions(spaceFilter)}</select></div><section class="panel calendar-panel" aria-label="${esc(monthLabel)} calendar"><div class="calendar-grid">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="calendar-weekday">${d}</div>`).join('')}${Array.from({length:42},(_,i)=>{
   const date=offsetDate(i,parseDate(start)),outside=date.slice(0,7)!==calendarMonth.slice(0,7),dayEvents=eventsOn(date),dayExams=data.exams.filter(e=>e.date===date&&relevant(e)),dayTasks=sortedTasks(data.tasks.filter(t=>t.date===date&&relevant(t))),entries=[...dayEvents.map(x=>({x,type:'event'})),...dayExams.map(x=>({x,type:'exam'})),...dayTasks.map(x=>({x,type:'task'}))];
   return `<div class="calendar-cell ${outside?'outside':''} ${date===today()?'is-today':''} ${date===selectedDate?'selected':''}" data-drop-date="${date}"><button class="calendar-date" data-action="calendar-day" data-date="${date}" aria-pressed="${date===selectedDate}" aria-label="${esc(fullDate(date))}, ${entries.length} entries">${parseDate(date).getDate()}</button>${entries.slice(0,3).map(({x,type})=>chip(x,type)).join('')}${entries.length>3?`<button class="calendar-more" data-action="calendar-day" data-date="${date}">+${entries.length-3} more</button>`:''}</div>`
@@ -281,7 +294,7 @@ function renderWeek(){
  let first=7,last=22;for(const d of perDay)for(const e of d.events){first=Math.min(first,Math.floor(toMin(e.start)/60));last=Math.max(last,Math.ceil(toMin(e.end)/60))}
  const hours=Array.from({length:last-first},(_,i)=>first+i),now=new Date(),nowMin=now.getHours()*60+now.getMinutes(),hourLabel=h=>`${h%12||12} ${h<12?'AM':'PM'}`;
  const prev=$('#tg-scroll'),keepScroll=prev&&prev.dataset.week===startKey?prev.scrollTop:null;
- const eventBlock=(e,date)=>{const top=(toMin(e.start)-first*60)/60*HOUR_PX,height=Math.max((toMin(e.end)-toMin(e.start))/60*HOUR_PX-2,22);return `<button class="tg-event" draggable="true" data-drag="event" data-action="edit-event" data-id="${e.id}" data-occ="${date}" style="--course:${space(e.course).color};top:${top}px;height:${height}px;left:calc(${e.lane/e.lanes*100}% + 2px);width:calc(${100/e.lanes}% - 4px)" title="${esc(e.title)} · ${niceTime(e.start)}–${niceTime(e.end)}${e.location?' · '+esc(e.location):''}"><small>${niceTime(e.start)}${isRecurring(e)?' ↻':''}</small><strong>${esc(e.title)}</strong>${e.location&&height>50?`<small>${esc(e.location)}</small>`:''}</button>`};
+ const eventBlock=(e,date)=>{const top=(toMin(e.start)-first*60)/60*HOUR_PX,height=Math.max((toMin(e.end)-toMin(e.start))/60*HOUR_PX-2,22);return `<button class="tg-event" draggable="true" data-drag="event" data-action="edit-event" data-id="${e.id}" data-occ="${date}" style="--course:${evColor(e)};--ev-ink:${inkFor(evColor(e))};top:${top}px;height:${height}px;left:calc(${e.lane/e.lanes*100}% + 2px);width:calc(${100/e.lanes}% - 4px)" title="${esc(e.title)} · ${niceTime(e.start)}–${niceTime(e.end)}${e.location?' · '+esc(e.location):''}"><strong>${esc(e.title)}</strong>${height>=60?`<small>${compactTime(e.start)} – ${compactTime(e.end)}</small>${e.location?`<small>${esc(e.location)}</small>`:''}`:`<small>${compactTime(e.start)}${e.location?', '+esc(e.location):''}</small>`}</button>`};
  $('#content').innerHTML=`<div class="view-tools"><div class="week-controls"><button class="btn" data-action="prev-week" aria-label="Previous week">←</button><strong>${shortDate(startKey)} – ${shortDate(end)}, ${parseDate(end).getFullYear()}</strong><button class="btn" data-action="next-week" aria-label="Next week">→</button><button class="btn" data-action="this-week">This week</button></div><select class="space-filter" id="space-filter" aria-label="Filter by space">${spaceOptions(spaceFilter)}</select></div>
  <div class="tg" style="--hour:${HOUR_PX}px"><div class="tg-inner">
   <div class="tg-head"><div></div>${perDay.map(d=>{const p=parseDate(d.date);return `<div class="tg-dayhead ${d.date===today()?'current':''}"><div><small>${p.toLocaleDateString(undefined,{weekday:'short'})}</small> <strong>${p.getDate()}</strong></div><button class="icon-btn" data-action="add-event" data-date="${d.date}" aria-label="Add event on ${esc(fullDate(d.date))}">+</button></div>`}).join('')}</div>
@@ -290,7 +303,7 @@ function renderWeek(){
    <div class="tg-gutter">${hours.map(h=>`<span class="tg-hour" style="top:${(h-first)*HOUR_PX}px">${hourLabel(h)}</span>`).join('')}</div>
    ${perDay.map(d=>`<div class="tg-col ${d.date===today()?'current':''}" data-drop-date="${d.date}" data-drop-timed="1" data-first="${first}">${d.events.map(e=>eventBlock(e,d.date)).join('')}${d.date===today()&&nowMin>=first*60&&nowMin<=last*60?`<div class="tg-now" style="top:${(nowMin-first*60)/60*HOUR_PX}px" aria-hidden="true"></div>`:''}</div>`).join('')}
   </div></div>
- </div></div><p class="week-note">Click an empty time slot to add an event there. Drag events to a new day or time, and drag due items between days. ↻ marks a repeating event; dragging one moves only that date.</p>`;
+ </div></div><p class="week-note">Click an empty time slot to add an event there. Drag events to a new day or time, and drag due items between days. Dragging one date of a repeating event moves only that date.</p>`;
  // Keep the scroll position on minute refreshes; otherwise start near now (this week) or 8 AM.
  const sc=$('#tg-scroll');sc.scrollTop=keepScroll??((weekOffset===0?Math.max(nowMin/60-1.5,first):Math.max(8,first))-first)*HOUR_PX;
 }
@@ -337,6 +350,7 @@ document.addEventListener('click',event=>{
  if(a?.startsWith('edit-')&&['task','event','exam','space'].includes(a.slice(5)))openEditor(a.slice(5),id,undefined,false,{},el.dataset.occ||null);
  if(a==='skip-occurrence'){const e=data.events.find(x=>x.id===id);if(e){remember();e.skipDates=[...new Set([...(e.skipDates||[]),el.dataset.occ])];save();$('#editor').close();render();toast('Removed '+shortDate(el.dataset.occ)+' only.',true)}}
  if(a==='undo-last')undoLast();
+ if(a==='toggle-routine'){showRoutine=!showRoutine;try{localStorage.setItem('gilbert-show-repeating',showRoutine?'1':'')}catch(e){}render()}
  if(a==='gcal-open'){renderGcal();$('#gcal-dialog').showModal();if(gs().connected&&gTokenValid()&&!gCalendars.length)gLoadCalendars().then(renderGcal).catch(()=>{})}
  if(a==='gcal-close')$('#gcal-dialog').close();
  if(a==='gcal-connect')gConnect();
@@ -432,7 +446,10 @@ async function gFetch(path,{method='GET',body,query}={}){
  return r.status===204?null:r.json();
 }
 async function gListAll(path,query){const out=[];let pageToken;do{const r=await gFetch(path,{query:{...query,pageToken}});out.push(...(r.items||[]));pageToken=r.nextPageToken}while(pageToken);return out}
-async function gLoadCalendars(){gCalendars=await gListAll('users/me/calendarList',{minAccessRole:'writer'})}
+async function gLoadCalendars(){gCalendars=await gListAll('users/me/calendarList',{minAccessRole:'writer'});const S=gs(),c=gCalendars.find(c=>S.calendarId==='primary'?c.primary:c.id===S.calendarId);if(c&&validColor(c.backgroundColor))S.calendarColor=c.backgroundColor}
+/* Google's event color palette (colorId 1–11). Events without one use the calendar's color. */
+const G_COLORS={1:'#7986cb',2:'#33b679',3:'#8e24aa',4:'#e67c73',5:'#f6bf26',6:'#f4511e',7:'#039be5',8:'#616161',9:'#3f51b5',10:'#0b8043',11:'#d50000'};
+const gColorOf=g=>G_COLORS[g.colorId]||(validColor(gs().calendarColor)?gs().calendarColor:'');
 /* Google ⇄ planner field conversion. Times are shown in this device's time zone. */
 const gLocal=dt=>{const d=new Date(dt);return{date:dateKey(d),time:toKey(d.getHours()*60+d.getMinutes())}};
 const gStamp=v=>v.endsWith('Z')?new Date(`${v.slice(0,4)}-${v.slice(4,6)}-${v.slice(6,8)}T${v.slice(9,11)}:${v.slice(11,13)}:${v.slice(13,15)}Z`):null;
@@ -477,6 +494,7 @@ async function gSync(interactive=false){
  gSyncing=true;gSetStatus('');const report={in:0,out:0,del:0,conflicts:0,failed:0},lastSync=S.lastSync||0;
  try{
   const base=`calendars/${encodeURIComponent(S.calendarId||'primary')}/events`,winStart=new Date(Date.now()-30*864e5).toISOString();
+  if(!S.calendarColor){try{await gLoadCalendars()}catch(e){}}
   const items=await gListAll(base,{singleEvents:'false',showDeleted:'true',maxResults:'2500',timeMin:winStart,timeMax:new Date(Date.now()+365*864e5).toISOString()});
   const byGid=new Map(),byPid=new Map();
   for(const [type,list] of [['event',data.events],['task',data.tasks]])for(const x of list){byPid.set(x.id,{type,x});if(x.gid)byGid.set(x.gid,{type,x})}
@@ -486,6 +504,7 @@ async function gSync(interactive=false){
   // Was linked last time but is gone from the planner now → deleted here (unless Google changed it since).
   const deletedHere=g=>S.links[g.id]&&!(Date.parse(g.updated)>lastSync);
   const googleWins=(type,x,g)=>{if(x.gUpdated===g.updated)return false;if(!x.gUpdated)return Date.parse(g.updated)>=(x.mod||0);if(!changedHere(type,x))return true;report.conflicts++;return Date.parse(g.updated)>=(x.mod||0)};
+  const paint=g=>{const m=byGid.get(g.id);if(m?.type==='event'){const c=gColorOf(g);if(c)m.x.gColor=c;else delete m.x.gColor}};
   const addLocal=(type,x,g)=>{gLink(type,x,g);data[type==='task'?'tasks':'events'].push(x);byGid.set(g.id,{type,x});report.in++};
   // Google deleted something: drop it here, unless the planner copy was edited more recently.
   const removeLocal=(m,g)=>{
@@ -502,6 +521,7 @@ async function gSync(interactive=false){
    const fields={...f,repeatDays:[...(rule.days||[parseDate(f.date).getDay()])].sort(),repeatUntil:rule.until,skipDates:rule.exdates};
    if(!m){if(!deletedHere(g))addLocal('event',{id:uid(),course:gSpace(g),...fields,gRec:true},g)}
    else if(googleWins(m.type,m.x,g)){const keep=(m.x.skipDates||[]).filter(d=>data.events.some(e=>e.gInstanceOf===g.id&&e.gOrig===d));Object.assign(m.x,fields,{skipDates:[...new Set([...fields.skipDates,...keep])].sort(),gRec:true});gLink('event',m.x,g);report.in++}
+   paint(g);
   }
   // 2) Single dates of weekly series that were edited or cancelled in Google
   for(const g of exceptions){const parent=byGid.get(g.recurringEventId);if(!parent||parent.type!=='event'||!isRecurring(parent.x))continue;
@@ -511,6 +531,7 @@ async function gSync(interactive=false){
    const f=eventFields(g);if(!f)continue;
    if(!m){if(!deletedHere(g))addLocal('event',{id:uid(),course:series.course,...f,repeatDays:[],repeatUntil:'',skipDates:[],gInstanceOf:series.gid,gOrig:orig},g)}
    else if(googleWins('event',m.x,g)){Object.assign(m.x,f);gLink('event',m.x,g);report.in++}
+   paint(g);
   }
   // 3) Patterns the planner can't express: bring in each date (next ~6 months) on its own
   for(const g of complex){
@@ -520,6 +541,7 @@ async function gSync(interactive=false){
     const f=eventFields(i);if(!f)continue;
     if(!m){if(!deletedHere(i))addLocal('event',{id:uid(),course:gSpace(g),...f,repeatDays:[],repeatUntil:'',skipDates:[],gInstanceOf:g.id,gComplex:true,gOrig:gLocal(i.originalStartTime?.dateTime||i.start.dateTime).date},i)}
     else if(googleWins('event',m.x,i)){Object.assign(m.x,f);gLink('event',m.x,i);report.in++}
+    paint(i);
    }
   }
   // 4) One-time events (and the "Due:" blocks made from tasks)
@@ -532,6 +554,7 @@ async function gSync(interactive=false){
    const f=eventFields(g);if(!f)continue;
    if(!m){if(!deletedHere(g))addLocal('event',{id:uid(),course:gSpace(g),...f,repeatDays:[],repeatUntil:'',skipDates:[]},g)}
    else if(m.type==='event'&&googleWins('event',m.x,g)){Object.assign(m.x,f,{repeatDays:[],repeatUntil:'',skipDates:[]});gLink('event',m.x,g);report.in++}
+   paint(g);
   }
   // 5) Deleted in the planner → delete in Google
   const present=new Set([...data.events,...data.tasks].map(x=>x.gid).filter(Boolean)),gById=new Map(items.map(g=>[g.id,g]));
@@ -589,8 +612,8 @@ document.addEventListener('change',event=>{
  if(t.id==='gcal-tasks'){S.sendTasks=t.checked;save();toast(t.checked?'Tasks with due times will sync.':'Task blocks will be removed from Google on the next sync.')}
  if(t.id==='gcal-calendar'){const c=gCalendars.find(c=>c.id===t.value),id=c?.primary?'primary':t.value;if(id===S.calendarId)return;
   if(!confirm('Switch calendars? Planner entries will be unlinked from the current calendar (nothing is deleted there) and synced fresh with the new one.')){renderGcal();return}
-  for(const x of [...data.events,...data.tasks])for(const k of ['gid','gUpdated','gFp','gInstanceOf','gOrig','gComplex','gReadOnly','gRec','gOff'])delete x[k];
-  data.events=data.events.filter(e=>!e.gComplex);Object.assign(S,{calendarId:id,calendarName:c?.summary||'',links:{},lastSync:0});save();renderGcal();gSync(true).then(renderGcal)}
+  for(const x of [...data.events,...data.tasks])for(const k of ['gid','gUpdated','gFp','gInstanceOf','gOrig','gComplex','gReadOnly','gRec','gOff','gColor'])delete x[k];
+  data.events=data.events.filter(e=>!e.gComplex);Object.assign(S,{calendarId:id,calendarName:c?.summary||'',calendarColor:validColor(c?.backgroundColor)?c.backgroundColor:'',links:{},lastSync:0});save();renderGcal();gSync(true).then(renderGcal)}
 });
 setInterval(()=>{if(data.sync?.connected&&gTokenValid()&&!document.hidden&&!$('#editor').open)gSync(false);else gSetStatus()},5*60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&data.sync?.connected&&gTokenValid()&&Date.now()-(data.sync.lastSync||0)>60000)gSync(false)});
